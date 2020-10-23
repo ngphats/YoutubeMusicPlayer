@@ -1,0 +1,24 @@
+{
+  "name": "webpack_sample",
+  "version": "1.0.0",
+  "description": "Webpack sample",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "node"
+  ],
+  "author": "ngphats@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "webpack": "^5.2.0",
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "express-session": "^1.17.1",
+    "vue": "^2.2.1",
+    "vue-awesome": "^2.2.0",
+    "vue-resource": "^1.2.1",
+    "vue-router": "^2.3.0"
+  }
+}
