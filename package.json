@@ -4,7 +4,9 @@
   "description": "Webpack sample",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "cross-env NODE_ENV=development webpack --progress",
+    "watch": "cross-env NODE_ENV=development webpack --watch --progress"
   },
   "keywords": [
     "node"
@@ -12,7 +14,6 @@
   "author": "ngphats@gmail.com",
   "license": "ISC",
   "dependencies": {
-    "webpack": "^5.2.0",
     "body-parser": "^1.17.1",
     "express": "^4.15.2",
     "express-session": "^1.17.1",
@@ -20,5 +21,21 @@
     "vue-awesome": "^2.2.0",
     "vue-resource": "^1.2.1",
     "vue-router": "^2.3.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.0.0",
+    "babel-loader": "^6.0.0",
+    "babel-plugin-component": "^0.9.1",
+    "babel-preset-latest": "^6.0.0",
+    "cross-env": "^3.0.0",
+    "css-loader": "^0.25.0",
+    "file-loader": "^0.9.0",
+    "nodemon": "^1.14.1",
+    "style-loader": "^0.16.0",
+    "vue-loader": "^11.1.4",
+    "vue-template-compiler": "^2.2.1",
+    "webpack-cli": "^4.1.0",
+    "webpack": "^2.2.0",
+    "webpack-dev-server": "^2.2.0"
   }
 }
