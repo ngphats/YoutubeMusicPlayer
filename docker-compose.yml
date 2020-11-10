@@ -1,0 +1,11 @@
+version: "3.5"
+services:
+  master_site:
+    build: .
+    command: nodemon -L app.js
+    volumes:
+      - .:/app/
+      - /app/node_modules
+    ports:
+      - "8081:8081"
+    restart: on-failure

@@ -1,1 +1,3 @@
-console.log("viewimage");
+console.log("viewimage")
+
+console.log("ABC")
