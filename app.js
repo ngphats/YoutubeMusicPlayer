@@ -4,9 +4,13 @@ const path = require("path");
 const bodyParse = require("body-parser");
 const session = require("express-session");
 const { appConfig } = require("./config/app");
+const cors = require('cors')
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const io = require('socket.io')(server);
 const router = require("./server/router");
-const archiver = require('archiver');
+const service = require('./server/services');
 
 const resolve = (file) => path.resolve(__dirname, file);
 app.use("/dist", express.static(resolve("./dist")));
@@ -27,31 +31,7 @@ app.use(
     })
 );
 
-function zip() {
-    var output = fs.createWriteStream('target.zip');
-    var archive = archiver('zip');
-    
-    output.on('close', function () {
-        console.log(archive.pointer() + ' total bytes');
-        console.log('archiver has been finalized and the output file descriptor has closed.');
-    });
-    
-    archive.on('error', function(err){
-        throw err;
-    });
-    
-    archive.pipe(output);
-    
-    // append files from a sub-directory, putting its contents at the root of archive
-    archive.directory(__dirname+'/data/', false);
-    
-    // append files from a sub-directory and naming it `new-subdir` within the archive
-    //archive.directory(__dirname+'/data/', 'subdir');
-    
-    archive.finalize();
-}
-
-zip()
+app.use(express.static(__dirname + '/public'));
 
 app.get("*", function (req, res) {
     let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
@@ -79,6 +59,9 @@ app.use(function (err, req, res, next) {
     res.send(err);
 });
 
-app.listen(8081, function () {
+// Socket listen...
+service.socket.events(io);
+
+server.listen(8081, function () {
     console.log("connecting localhost:8081");
 });

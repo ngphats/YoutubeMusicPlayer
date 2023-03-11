@@ -2,8 +2,7 @@ var path = require('path')
 
 module.exports = {
 	entry: {
-		home: './resources/assets/js/home.js',
-		viewimage: './resources/assets/js/viewimage.js'
+		app: './resources/assets/js/app.js'
 	},
 	output: {
 		filename: '[name].js',
