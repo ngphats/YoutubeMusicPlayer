@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <link rel="icon" href="favicon.png" type="image/png">
+    <title>Home</title>
+</head>
+
+<body>
+    <div id="app"></div>
+
+    <div id="playem_video"></div>
+
+    <script src="/assets/js/playem-min.js"></script>
+
+    <script>
+        var YOUTUBE_API_KEY = "AIzaSyB_gyjrellrDFFW2BELstydonC0G8A2e5A";
+
+        function logEvent (evtName) {
+            this.on(evtName, (data) => console.log("event:", evtName, data)
+        )}
+
+        const config = {
+            playerContainer: document.getElementById("playem_video"),
+        };
+
+        // init playem and players
+        var playem = new Playem();
+        playem.addPlayer(YoutubePlayer, config);
+
+        // init logging for all player events
+        ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
+
+        // play video tracks
+        playem.addTrackByUrl("youtube.com/watch?v=2m5K5jxME18");
+        // playem.addTrackByUrl("https://www.youtube.com/watch?v=7nrib3zSnjA&ab_channel=VuiL%C3%AAn");
+
+        // playem.play();
+
+    </script>
+
+    <script src="/assets/js/app.js"></script>
+</body>
+
+</html>

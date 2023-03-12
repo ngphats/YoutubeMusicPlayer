@@ -31,15 +31,25 @@ app.use(
     })
 );
 
-app.use(express.static(__dirname + '/public'));
+app.use(express.static('./public'));
 
-app.get("*", function (req, res) {
-    let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
-    res.send(html);
-});
+// set the view engine to ejs
+app.set('view engine', 'ejs');
+app.set('views', './views');
 
 // Routes
 app.use(router)
+
+// setting cors
+app.use(cors({
+    origin:['http://localhost:8081'], 
+    credentials: true
+}));
+
+// app.get("*", function (req, res) {
+//     let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
+//     res.send(html);
+// });
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
