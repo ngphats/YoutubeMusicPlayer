@@ -22,6 +22,7 @@ exports.view = [
 
 exports.add = [
     async (req, res, next) => {
+        
         let addInfo = {
             title: 'Hà Anh Tuấn',
             link: "https://www.youtube.com/watch?v=2QgDXI2U3Ew&ab_channel=TProduction",

@@ -4,9 +4,9 @@
 		<div class="row justify-content-center">
 			<div class="col-md-4">
 				<button type="button" class="btn btn-primary" @click="play">Play</button>
-				<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" data-whatever="@getbootstrap">Add</button>
-				<button type="button" class="btn btn-primary" @click="update">Update</button>
-				<button type="button" class="btn btn-primary" @click="tracks">Tracks</button>
+				<button type="button" class="btn btn-primary" @click="add">Add</button>
+				<!-- <button type="button" class="btn btn-primary" @click="update">Update</button>
+				<button type="button" class="btn btn-primary" @click="tracks">Tracks</button> -->
 			</div>
 		</div>
 
@@ -27,7 +27,7 @@
 				<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="exampleModalLabel">Add</h5>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="formClearSubmit">
 					<span aria-hidden="true">&times;</span>
 					</button>
 				</div>
@@ -35,17 +35,20 @@
 					<form>
 					<div class="form-group">
 						<label for="recipient-name" class="col-form-label">Link Youtube:</label>
-						<input type="text" class="form-control" id="recipient-name">
+						<input type="text" class="form-control" id="recipient-name" v-model="tmpFormLink">
+						<div class="invalid-feedback" style="display: block" v-show="errorTmpFormLink.length > 0">
+							{{errorTmpFormLink}}
+						</div>
 					</div>
 					<div class="form-group">
 						<label for="message-text" class="col-form-label">Message:</label>
-						<textarea class="form-control" id="message-text"></textarea>
+						<textarea class="form-control" id="message-text" v-model="tmpFormMessage"></textarea>
 					</div>
 					</form>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-					<button type="button" class="btn btn-primary">Add</button>
+					<button type="button" class="btn btn-secondary" data-dismiss="modal" @click="formClearSubmit">Close</button>
+					<button type="button" class="btn btn-primary" @click="formAddSubmit">Add</button>
 				</div>
 				</div>
 			</div>
@@ -63,7 +66,9 @@ export default {
 		return {
 			playList: [],
 			tmpFormLink: "",
+			errorTmpFormLink: "",
 			tmpFormMessage: "",
+			myModal: {}
 		};
 	},
 	mounted() {
@@ -85,26 +90,47 @@ export default {
 			socket.disconnect();
 		},
 		formAddSubmit() {
-			if (this.tmpFormLink !== "" && this.tmpFormMessage !== "") {
-				axios.post(`/add`, {
-					link: this.tmpFormLink,
-					message: this.tmpFormMessage,
-				}).then((response) => {
-					let { status, data } = response.data
-					if (typeof status === "string" && status === "OK") {
-						this.playList = data
+			if (null !== this.tmpFormLink && this.tmpFormLink.length > 0) {
+				playem.getTrackInfo(this.tmpFormLink, (item) => {
+					if (undefined === item) {
+						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại link."
+					} else {
+
+						axios.post(`/add`, {
+							link: this.tmpFormLink,
+							message: this.tmpFormMessage,
+						}).then((response) => {
+							let { status, data } = response.data
+
+							console.log({ status, data })
+
+							if (typeof status === "string" && status === "OK") {
+								// this.playList = data
+							}
+						})
+
+						this.myModal.hide()
+
 					}
 				})
+			} else {
+				this.errorTmpFormLink = "Mời bạn nhập link."
 			}
 		},
+		formClearSubmit() {			
+			this.tmpFormLink = ""
+			this.errorTmpFormLink = ""
+			this.tmpFormMessage = ""
+		},
 		add() {
-			axios.post(`/add`).then((response) => {
-				console.log(response.data);
+			this.myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+				keyboard: false
 			})
 
-			playem.addTrackByUrl("https://www.youtube.com/watch?v=TxM33dm_v7o");
+			this.myModal.show()
 		},
 		play() {
+			// playem.addTrackByUrl("https://www.youtube.com/watch?v=TxM33dm_v7o");
 			playem.play();
 		},
 		tracks() {
