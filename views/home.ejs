@@ -22,25 +22,19 @@
             this.on(evtName, (data) => console.log("event:", evtName, data)
         )}
 
-        const config = {
-            playerContainer: document.getElementById("playem_video"),
-        };
-
         // init playem and players
         var playem = new Playem();
-        playem.addPlayer(YoutubePlayer, config);
+        playem.addPlayer(YoutubePlayer, {
+            playerContainer: document.getElementById("playem_video"),
+        });
 
         // init logging for all player events
         ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
-
-        // play video tracks
-        playem.addTrackByUrl("youtube.com/watch?v=2m5K5jxME18");
-        // playem.addTrackByUrl("https://www.youtube.com/watch?v=7nrib3zSnjA&ab_channel=VuiL%C3%AAn");
-
-        // playem.play();
-
     </script>
 
+    <script src="/jquery.min.js"></script>
+    <script src="/popper.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
     <script src="/assets/js/app.js"></script>
 </body>
 

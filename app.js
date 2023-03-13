@@ -9,11 +9,24 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
+
+// Firebase admin default setting
+const admin = require('firebase-admin')
+let serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+})
+
 const router = require("./server/router");
 const service = require('./server/services');
 
-const resolve = (file) => path.resolve(__dirname, file);
-app.use("/dist", express.static(resolve("./dist")));
+app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist'));
+app.use('/', express.static(__dirname + '/node_modules/jquery/dist'));
+app.use('/', express.static(__dirname + '/node_modules/@popperjs/core/dist/umd'));
+
+// const resolve = (file) => path.resolve(__dirname, file);
+// app.use("/dist", express.static(resolve("./dist")));
+
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({ extended: true }));
 
@@ -46,10 +59,10 @@ app.use(cors({
     credentials: true
 }));
 
-// app.get("*", function (req, res) {
-//     let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
-//     res.send(html);
-// });
+app.get("/html", function (req, res) {
+    let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
+    res.send(html);
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
