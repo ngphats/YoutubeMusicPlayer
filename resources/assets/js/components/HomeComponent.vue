@@ -15,7 +15,7 @@
 		<div class="row justify-content-center">
 			<div class="col-md-6">
 				<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }">
-					<a href=""><img :src="track.thumbnail" style="width:100%"></a>
+					<a><img :src="track.thumbnail" style="width:100%"></a>
 					<div class="caption">
 						<h6>{{ track.title }}</h6>
 						<p>{{ track.message }}</p>

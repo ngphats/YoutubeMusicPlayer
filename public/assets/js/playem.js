@@ -272,7 +272,7 @@ function Playem (playemPrefs) {
 			try {
 				window.soundManager.stopAll()
 			} catch (e) {
-				console.error('playem tried to stop all soundManager sounds =>', e)
+				// console.error('playem tried to stop all soundManager sounds =>', e)
 			}
 		}
 
@@ -291,7 +291,7 @@ function Playem (playemPrefs) {
 				if (currentTrack.index == trackList.length - 1) { that.emit('loadMore') }
 				// if the track does not start playing within 7 seconds, skip to next track
 				setPlayTimeout(function () {
-					console.warn('PLAYEM TIMEOUT') // => skipping to next song
+					// console.warn('PLAYEM TIMEOUT') // => skipping to next song
 					that.emit('onError', {code: 'timeout', source: 'Playem'})
 					// exportedMethods.next();
 				})
