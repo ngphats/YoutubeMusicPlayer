@@ -1,18 +1,20 @@
 <template>
 	<div class="container">
-		
-		<div class="row justify-content-center">
-			<div class="col-md-4">
-				<button type="button" class="btn btn-primary" @click="play">Play</button>
-				<button type="button" class="btn btn-primary" @click="pause">Pause</button>
-				<button type="button" class="btn btn-primary" @click="next">Next</button>
-				<button type="button" class="btn btn-primary" @click="add">Add</button>
-			</div>
-		</div>
 
 		<div class="row justify-content-center">
 			<div class="col-md-6">
-				<div v-for="track in playList" :key="track.id" class="thumbnail">
+				<div :class="{ thumbnail: true, control: true }">
+				<button type="button" class="btn btn-primary btn-sm" @click="play">Play</button>
+				<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
+				<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }">
 					<a href=""><img :src="track.thumbnail" style="width:100%"></a>
 					<div class="caption">
 						<h6>{{ track.title }}</h6>
@@ -34,7 +36,7 @@
 				<div class="modal-body">
 					<form>
 					<div class="form-group">
-						<label for="recipient-name" class="col-form-label">Link Youtube:</label>
+						<label for="recipient-name" class="col-form-label">URL Youtube:</label>
 						<input type="text" class="form-control" id="recipient-name" v-model="tmpFormLink">
 						<div class="invalid-feedback" style="display: block" v-show="errorTmpFormLink.length > 0">
 							{{errorTmpFormLink}}
@@ -59,17 +61,53 @@
 
 <script>
 
-import { socket } from "../socketio.service";
+import io from 'socket.io-client'
+
+// function logEvent (evtName) {
+// 	this.on(evtName, (data) => console.log("event:", evtName, data)
+// )}
+
+// init logging for all player events
+// ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
+
 
 export default {
 	data() {
 		return {
+			socket: {},
 			playList: [],
 			tmpFormLink: "",
 			errorTmpFormLink: "",
 			tmpFormMessage: "",
-			myModal: {}
+			myModal: {},
+			playem: {},
+			activeTrack: ""
 		};
+	},
+	created() {
+		this.socket = io(serverURL, {
+			autoConnect: true
+		})
+
+		this.socket.on('message-test1', data => {
+			console.log({data})
+		})
+
+        this. socket.on('add_new_track', data => {
+			console.log({add_new_track_client: data})
+
+			this.playList.push(data)
+		})
+
+		// init playem and players
+		this.playem = new Playem();
+		this.playem.addPlayer(YoutubePlayer, {
+			playerContainer: document.getElementById("playem_video"),
+		})
+
+		this.playem.on("onTrackChange", (data) => {
+			this.activeTrack = data.trackId
+		})
 	},
 	mounted() {
 		this.view()
@@ -87,16 +125,16 @@ export default {
 			})
 		},
 		create() {
-			socket.emit("create", []);
+			this.socket.emit("create", []);
 		},
 		disconnect() {
-			socket.disconnect();
+			this.socket.disconnect();
 		},
 		formAddSubmit() {
 			if (null !== this.tmpFormLink && this.tmpFormLink.length > 0) {
-				playem.getTrackInfo(this.tmpFormLink, (item) => {
+				this.playem.getTrackInfo(this.tmpFormLink, (item) => {
 					if (undefined === item) {
-						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại link."
+						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại URL."
 					} else {
 						let trackInfo = {
 							ytid: item.id,
@@ -108,13 +146,12 @@ export default {
 
 						axios.post(`/add`, trackInfo).then((response) => {
 							let { status, data } = response.data
-							
-							console.log({ status, data })
-							
 							if (typeof status === "string" && status === "OK") {
 								this.playList.push(data)
-
 								this.addTrack(data)
+								
+								// add for all user..
+								this.socket.emit("add_new_track", data);
 							}
 						})
 
@@ -123,7 +160,7 @@ export default {
 					}
 				})
 			} else {
-				this.errorTmpFormLink = "Mời bạn nhập link."
+				this.errorTmpFormLink = "Xin mời nhập URL bài hát yêu thích của bạn."
 			}
 		},
 		formClearSubmit() {			
@@ -139,19 +176,19 @@ export default {
 			this.myModal.show()
 		},
 		addTrack(track) {
-			playem.addTrackByUrl(track.url)
+			this.playem.addTrackByUrl(track.url)
 		},
 		play() {
-			playem.play();
+			this.playem.play();
 		},
 		tracks() {
-			let tracks = playem.getQueue()
+			let tracks = this.playem.getQueue()
 		},
 		next() {
-			playem.next();
+			this.playem.next();
 		},
 		pause() {
-			playem.pause();
+			this.playem.pause();
 		},
 		update() {
 			axios.post(`/update`).then((response) => {
@@ -182,5 +219,11 @@ export default {
 		width: 70%;
 		padding: 0.5rem;
 		float: left;
+	}
+	.thumbnail.active_track {
+		border-left: 5px solid green;
+	}
+	.thumbnail.control {
+		text-align: center;
 	}
 </style>

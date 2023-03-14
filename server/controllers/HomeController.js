@@ -1,4 +1,5 @@
 const fs = require("fs")
+const dateFormat = require("dateformat")
 
 const log = require("../library/Log")
 const playListModel = require("../models/PlayListModel")
@@ -6,7 +7,7 @@ const playListModel = require("../models/PlayListModel")
 
 exports.home = [
     async (req, res, next) => {
-        res.render('home')
+        res.render('home', {serverURL: `http://localhost:8081`})
     }
 ]
 
@@ -34,6 +35,7 @@ exports.add = [
         log.debug("home-add", {trackParams})
         if (trackParams.title && trackParams.url) {
             trackParams.play_status = 'waiting'
+            trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
             await playListModel.add(trackParams)
             res.send({status: `OK`, data: trackParams})
             res.end()

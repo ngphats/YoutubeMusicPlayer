@@ -6,7 +6,7 @@ const PlayListModel = {};
 
 PlayListModel.getAll = async () => {
     let docRef = db.collection(`koi-streaming`)
-    const uploadQueueInfo = await docRef.get()
+    const uploadQueueInfo = await docRef.orderBy('add_datetime').get()
     if (uploadQueueInfo.empty) {
         return []
     }

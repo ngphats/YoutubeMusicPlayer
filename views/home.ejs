@@ -5,36 +5,28 @@
     <meta charset="utf-8">
     <link rel="shortcut icon" href="favicon.png" type="image/png">
     <link rel="icon" href="favicon.png" type="image/png">
-    <title>Home</title>
+    <title>Cùng nghe nhạc nào..</title>
+
+    <style>
+        #playem_video {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+    </style>
 </head>
 
 <body>
     <div id="app"></div>
-
     <div id="playem_video"></div>
 
-    <script src="/assets/js/playem-all.js"></script>
-
     <script>
-        var YOUTUBE_API_KEY = "AIzaSyB_gyjrellrDFFW2BELstydonC0G8A2e5A";
-
-        function logEvent (evtName) {
-            this.on(evtName, (data) => console.log("event:", evtName, data)
-        )}
-
-        // init playem and players
-        var playem = new Playem();
-        playem.addPlayer(YoutubePlayer, {
-            playerContainer: document.getElementById("playem_video"),
-        });
-
-        // init logging for all player events
-        ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
+        const serverURL = `http://localhost:8081`
     </script>
-
     <script src="/jquery.min.js"></script>
     <script src="/popper.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
+    <script src="/assets/js/playem.js"></script>
     <script src="/assets/js/app.js"></script>
 </body>
 
