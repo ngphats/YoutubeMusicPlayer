@@ -4,16 +4,16 @@
 		<div class="row justify-content-center">
 			<div class="col-md-4">
 				<button type="button" class="btn btn-primary" @click="play">Play</button>
+				<button type="button" class="btn btn-primary" @click="pause">Pause</button>
+				<button type="button" class="btn btn-primary" @click="next">Next</button>
 				<button type="button" class="btn btn-primary" @click="add">Add</button>
-				<!-- <button type="button" class="btn btn-primary" @click="update">Update</button>
-				<button type="button" class="btn btn-primary" @click="tracks">Tracks</button> -->
 			</div>
 		</div>
 
 		<div class="row justify-content-center">
-			<div class="col-md-4">
+			<div class="col-md-6">
 				<div v-for="track in playList" :key="track.id" class="thumbnail">
-					<a href="#"><img src="https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg" style="width:100%"></a>
+					<a href=""><img :src="track.thumbnail" style="width:100%"></a>
 					<div class="caption">
 						<h6>{{ track.title }}</h6>
 						<p>{{ track.message }}</p>
@@ -79,7 +79,10 @@ export default {
 			axios.post(`/view`).then((response) => {
 				let { status, data } = response.data
 				if (typeof status === "string" && status === "OK") {
-					this.playList = data
+					data.forEach((item) => {
+						this.playList.push(item)
+						this.addTrack(item)
+					})
 				}
 			})
 		},
@@ -95,22 +98,28 @@ export default {
 					if (undefined === item) {
 						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại link."
 					} else {
+						let trackInfo = {
+							ytid: item.id,
+							thumbnail: item.img,
+							title: item.title,
+							url: item.url,
+							message: this.tmpFormMessage
+						}
 
-						axios.post(`/add`, {
-							link: this.tmpFormLink,
-							message: this.tmpFormMessage,
-						}).then((response) => {
+						axios.post(`/add`, trackInfo).then((response) => {
 							let { status, data } = response.data
-
+							
 							console.log({ status, data })
-
+							
 							if (typeof status === "string" && status === "OK") {
-								// this.playList = data
+								this.playList.push(data)
+
+								this.addTrack(data)
 							}
 						})
 
+						this.formClearSubmit()
 						this.myModal.hide()
-
 					}
 				})
 			} else {
@@ -129,14 +138,20 @@ export default {
 
 			this.myModal.show()
 		},
+		addTrack(track) {
+			playem.addTrackByUrl(track.url)
+		},
 		play() {
-			// playem.addTrackByUrl("https://www.youtube.com/watch?v=TxM33dm_v7o");
 			playem.play();
 		},
 		tracks() {
 			let tracks = playem.getQueue()
-
-			console.log({tracks})
+		},
+		next() {
+			playem.next();
+		},
+		pause() {
+			playem.pause();
 		},
 		update() {
 			axios.post(`/update`).then((response) => {
@@ -160,10 +175,11 @@ export default {
 	}
 	.thumbnail > a {
 		float: left;
-		width: 100px;
+		width: 30%;
 		overflow: hidden;
 	}
 	.thumbnail > div.caption {
+		width: 70%;
 		padding: 0.5rem;
 		float: left;
 	}

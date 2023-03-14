@@ -429,20 +429,12 @@ function Playem (playemPrefs) {
       },
       addTrackByUrl: function (url, metadata) {
         var p, player, eid
-
-        // console.log({players})
-
         for (p = 0; p < players.length; ++p) {
           player = players[p]
-          // console.log("test ", player.label, eid);
           eid = player.getEid(url)
-
           player.fetchMetadata(url, (item) => {
             console.log({item})
           })
-
-          // console.log({player, eid, metadata})
-
           if (eid) { return addTrackById(eid, player, metadata) }
         }
         return addTrack(metadata, url)

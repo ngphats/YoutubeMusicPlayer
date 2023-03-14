@@ -3,16 +3,18 @@ const fs = require("fs")
 const log = require("../library/Log")
 const playListModel = require("../models/PlayListModel")
 
+
 exports.home = [
     async (req, res, next) => {
         res.render('home')
     }
 ]
 
+
 exports.view = [
     async (req, res, next) => {
         let playList = await playListModel.getAll()
-        log.debug("home", playList)
+        log.debug("home-view", playList)
 
         res.send({status: `OK`, data: playList})
         res.end()
@@ -20,23 +22,28 @@ exports.view = [
 ]
 
 
+// let addInfo = {
+//     title: 'Hà Anh Tuấn',
+//     url: "https://www.youtube.com/watch?v=2QgDXI2U3Ew",
+//     play_status: 'waiting',
+//     message: 'Buổi chiều vui vẻ!',
+// }
 exports.add = [
     async (req, res, next) => {
-        
-        let addInfo = {
-            title: 'Hà Anh Tuấn',
-            link: "https://www.youtube.com/watch?v=2QgDXI2U3Ew&ab_channel=TProduction",
-            play_status: 'waiting',
-            message: 'Buổi chiều vui vẻ!',
-            sort_order: 3
+        let trackParams = req.body
+        log.debug("home-add", {trackParams})
+        if (trackParams.title && trackParams.url) {
+            trackParams.play_status = 'waiting'
+            await playListModel.add(trackParams)
+            res.send({status: `OK`, data: trackParams})
+            res.end()
+        } else {
+            res.send({status: `NG`})
+            res.end()
         }
-
-        await playListModel.add(addInfo)
- 
-        res.send({status: `OK`, data: addInfo})
-        res.end()
     }
 ]
+
 
 exports.update = [
     async (req, res, next) => {
@@ -45,6 +52,7 @@ exports.update = [
         res.end()
     }
 ]
+
 
 exports.delete = [
     async (req, res, next) => {
@@ -55,6 +63,7 @@ exports.delete = [
         res.end()
     }
 ]
+
 
 exports.sort = [
     async (req, res, next) => {
