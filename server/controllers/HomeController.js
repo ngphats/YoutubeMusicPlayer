@@ -7,7 +7,7 @@ const playListModel = require("../models/PlayListModel")
 
 exports.home = [
     async (req, res, next) => {
-        res.render('home', {serverURL: `http://localhost:8081`})
+        res.render('home', {serverURL: process.env.SOCKET_SERVER})
     }
 ]
 

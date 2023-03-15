@@ -1,9 +1,9 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+require('dotenv').config();
 const bodyParse = require("body-parser");
 const session = require("express-session");
-const { appConfig } = require("./config/app");
 const cors = require('cors')
 const app = express();
 const http = require('http');
@@ -55,7 +55,11 @@ app.use(router)
 
 // setting cors
 app.use(cors({
-    origin:['http://localhost:8081'], 
+    origin:[
+        "http://192.168.1.10:8081",
+        "https://www.youtube.com",
+        "https://www.google.com"
+    ], 
     credentials: true
 }));
 
