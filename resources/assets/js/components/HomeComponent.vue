@@ -93,9 +93,8 @@ export default {
 			console.log({data})
 		})
 
-        this. socket.on('add_new_track', data => {
-			console.log({add_new_track_client: data})
-
+        this.socket.on('add_new_track', data => {
+			this.addTrack(data)
 			this.playList.push(data)
 		})
 

@@ -1,8 +1,7 @@
 let events = (io) => {
     io.on('connection', (socket) => {
         console.log(`New client connected: ${socket.request.connection.remoteAddress}`);
-        let {id} = socket
-        console.log({id})
+        console.log(`Socket ID: ${socket.id}`)
         
         socket.on('disconnect', () => {
             console.log('disconnected')
