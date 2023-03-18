@@ -2,3 +2,4 @@ node_modules
 public/assets/js/app.js
 credentials/*
 tmp/logs/*
+.env
