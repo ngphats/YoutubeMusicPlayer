@@ -12,10 +12,11 @@ const io = require('socket.io')(server);
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
-let serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
+const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 })
+const dbAdmin = admin.firestore();
 
 const router = require("./server/router");
 const service = require('./server/services');
@@ -87,8 +88,9 @@ app.use(function (err, req, res, next) {
 });
 
 // Socket listen...
-service.socket.events(io);
+service.socket.events(io, dbAdmin);
 
-server.listen(8081, function () {
-    console.log("connecting localhost:8081");
+const server_port = process.env.SERVER_PORT;
+server.listen(server_port, function () {
+    console.log(`connecting with port:${server_port}`);
 });

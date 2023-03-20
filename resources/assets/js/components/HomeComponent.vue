@@ -4,9 +4,20 @@
 		<div class="row justify-content-center">
 			<div class="col-md-6">
 				<div :class="{ thumbnail: true, control: true }">
-				<button type="button" class="btn btn-primary btn-sm" @click="play">Play</button>
-				<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
-				<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
+					<div class="select-player">
+						<select class="form-select" aria-label="Default select example">
+							<option value="0">This Device</option>
+							<option value="1">192.168.1.112</option>
+						</select>
+					</div>
+
+					<div class="control-player">
+						<button type="button" class="btn btn-primary btn-sm" @click="play()">Play</button>
+						<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
+						<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
+
+						<button type="button" class="btn btn-primary btn-sm" @click="tracks">Debug</button>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -15,7 +26,7 @@
 		<div class="row justify-content-center">
 			<div class="col-md-6">
 				<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }">
-					<a><img :src="track.thumbnail" style="width:100%"></a>
+					<a @click="playTrack(track.ytid)"><img :src="track.thumbnail" style="width:100%"></a>
 					<div class="caption">
 						<h6>{{ track.title }}</h6>
 						<p>{{ track.message }}</p>
@@ -63,14 +74,6 @@
 
 import io from 'socket.io-client'
 
-// function logEvent (evtName) {
-// 	this.on(evtName, (data) => console.log("event:", evtName, data)
-// )}
-
-// init logging for all player events
-// ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
-
-
 export default {
 	data() {
 		return {
@@ -81,7 +84,8 @@ export default {
 			tmpFormMessage: "",
 			myModal: {},
 			playem: {},
-			activeTrack: ""
+			activeTrack: "",
+			listPlayerActive: []
 		};
 	},
 	created() {
@@ -89,13 +93,26 @@ export default {
 			autoConnect: true
 		})
 
-		this.socket.on('message-test1', data => {
+		this.socket.on('connect', () => {
+			// console.log(`Connected socket to server.`)
+			this.socket.emit("player_active")
+		})
+
+		this.socket.on('list_player_active', data => {
 			console.log({data})
 		})
 
         this.socket.on('add_new_track', data => {
 			this.addTrack(data)
 			this.playList.push(data)
+		})
+
+        this.socket.on('player_connect', data => {
+			console.log({data})
+		})
+
+        this.socket.on('player_disconnect', data => {
+			console.log({data})
 		})
 
 		// init playem and players
@@ -107,6 +124,13 @@ export default {
 		this.playem.on("onTrackChange", (data) => {
 			this.activeTrack = data.trackId
 		})
+
+		// function logEvent (evtName) {
+		// 	this.on(evtName, (data) => console.log("event:", evtName, data)
+		// )}
+
+		// init logging for all player events
+		// ["onPlay", "onReady", "onTrackChange", "onEnd", "onPause", "onTrackInfo", "onError"].forEach(logEvent.bind(playem));
 	},
 	mounted() {
 		this.view()
@@ -177,11 +201,27 @@ export default {
 		addTrack(track) {
 			this.playem.addTrackByUrl(track.url)
 		},
-		play() {
-			this.playem.play();
+		play(ind) {
+			this.playem.play(ind);
+		},
+		playTrack(selectTrack) {
+			if (undefined == selectTrack) {
+				return
+			}
+
+			let tracks = this.playem.getQueue()
+			let indSelectTrack = tracks.findIndex(item => {
+				return item.trackId === selectTrack
+			})
+			
+			this.play(indSelectTrack)
 		},
 		tracks() {
+			let selectTrack = "kqOybgUwTGY"
 			let tracks = this.playem.getQueue()
+			let indSelectTrack = tracks.findIndex(item => {
+				return item.trackId === selectTrack
+			})
 		},
 		next() {
 			this.playem.next();
@@ -199,10 +239,14 @@ export default {
 </script>
 
 <style>
+	a:hover {
+		cursor: pointer;
+	}
 	.thumbnail {
 		background-color: rgb(0 0 0 / 13%);
-		padding: 5px;
+		padding: 5px 2px;
 		margin-bottom: 2px;
+		border-left: 3px solid rgb(222 222 222);
 	}
 	.thumbnail::after {
 		content: "";
@@ -220,7 +264,7 @@ export default {
 		float: left;
 	}
 	.thumbnail.active_track {
-		border-left: 5px solid green;
+		border-left: 3px solid green;
 	}
 	.thumbnail.control {
 		text-align: center;
