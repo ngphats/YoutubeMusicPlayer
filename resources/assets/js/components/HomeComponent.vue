@@ -4,6 +4,7 @@
 		<div class="row justify-content-center">
 			<div class="col-md-6">
 				<div :class="{ thumbnail: true, control: true }">
+					
 					<div class="select-player">
 						<select class="form-select" aria-label="Default select example">
 							<option value="0">This Device</option>
@@ -77,6 +78,7 @@ import io from 'socket.io-client'
 export default {
 	data() {
 		return {
+			socketID: "",
 			socket: {},
 			playList: [],
 			tmpFormLink: "",
@@ -94,7 +96,7 @@ export default {
 		})
 
 		this.socket.on('connect', () => {
-			// console.log(`Connected socket to server.`)
+			console.log(this.socket)
 			this.socket.emit("player_active")
 		})
 
@@ -217,11 +219,18 @@ export default {
 			this.play(indSelectTrack)
 		},
 		tracks() {
-			let selectTrack = "kqOybgUwTGY"
-			let tracks = this.playem.getQueue()
-			let indSelectTrack = tracks.findIndex(item => {
-				return item.trackId === selectTrack
+			let selectTrack = "_3-uD0PvM7g"
+			let snoop = '_Rks2oCRS88'
+
+			// let tracks = this.playem.getQueue()
+			let tracks = this.playem.searchTracks(snoop, (item) => {
+				console.log(item)
 			})
+
+			// console.log(tracks)
+			// let indSelectTrack = tracks.findIndex(item => {
+			// 	return item.trackId === selectTrack
+			// })
 		},
 		next() {
 			this.playem.next();
@@ -266,7 +275,11 @@ export default {
 	.thumbnail.active_track {
 		border-left: 3px solid green;
 	}
-	.thumbnail.control {
+	/* .thumbnail.control {
 		text-align: center;
+	} */
+	.thumbnail.control .select-player {
+		float: left;
+    	padding: 4px 12px 0 5px;
 	}
 </style>

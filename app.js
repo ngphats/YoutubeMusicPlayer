@@ -21,7 +21,8 @@ const dbAdmin = admin.firestore();
 const router = require("./server/router");
 const service = require('./server/services');
 
-app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist'));
+app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
+app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist/js'));
 app.use('/', express.static(__dirname + '/node_modules/jquery/dist'));
 app.use('/', express.static(__dirname + '/node_modules/@popperjs/core/dist/umd'));
 
@@ -58,16 +59,16 @@ app.use(router)
 app.use(cors({
     origin:[
         "http://192.168.1.10:8081",
-        "https://www.youtube.com",
-        "https://www.google.com"
+        "https://www.youtube.com/*",
+        "https://www.google.com/*"
     ], 
     credentials: true
 }));
 
-app.get("/html", function (req, res) {
-    let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
-    res.send(html);
-});
+// app.get("/html", function (req, res) {
+//     let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
+//     res.send(html);
+// });
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

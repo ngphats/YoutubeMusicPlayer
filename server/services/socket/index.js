@@ -18,7 +18,11 @@ let events = (io, dbAdmin) => {
         })
 
         socket.on('disconnect', () => {
-            console.log('disconnected')
+            console.log(`Player disconnected`);
+            console.log(`IP: ${socket.request.connection.remoteAddress}`);
+            console.log(`SocketID: ${socket.id}`)
+
+            // console.log('disconnected')
         })
 
         socket.on('hello', data => {
@@ -29,23 +33,21 @@ let events = (io, dbAdmin) => {
             socket.broadcast.emit('add_new_track', data)
         })
 
-        console.log(`Firebase listener..`)
+        /*
+        console.log(`Firebase listen..`)
         const collectionRef = dbAdmin.collection('koi-streaming')
         collectionRef.onSnapshot((querySnapshot) => {
             querySnapshot.docChanges().forEach((change) => {
-                console.log('Change type:', change.type);
-    
                 if (change.type === 'added') {
                     const docData = change.doc.data()
                     console.log('document added:', docData)
-                    socket.broadcast.emit('add_new_track', docData)
+                    io.sockets.emit('add_new_track', docData)
                 }
     
                 if (change.type === 'modified') {
                     const docData = change.doc.data();
                     console.log('document modified:', docData);
                     socket.broadcast.emit('add_new_track', docData)
-
                 }
     
                 if (change.type === 'removed') {
@@ -54,6 +56,7 @@ let events = (io, dbAdmin) => {
                 }
             });
         });
+        */
     })
 }
 

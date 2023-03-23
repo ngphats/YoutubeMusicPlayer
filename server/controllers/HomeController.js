@@ -34,7 +34,7 @@ exports.add = [
         let trackParams = req.body
         log.debug("home-add", {trackParams})
         if (trackParams.title && trackParams.url) {
-            trackParams.play_status = 'waiting'
+            // trackParams.play_status = 'waiting'
             trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
             await playListModel.add(trackParams)
             res.send({status: `OK`, data: trackParams})

@@ -55,7 +55,11 @@
     "webpack-dev-server": "^2.2.0"
   },
   "nodemonConfig": {
-    "ignore": ["**/test/**", "**/docs/**", "**/tmp/**"],
+    "ignore": [
+      "**/test/**",
+      "**/docs/**",
+      "**/tmp/**"
+    ],
     "delay": 2500
   }
 }
