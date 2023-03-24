@@ -193,9 +193,11 @@ export default {
 			this.tmpFormMessage = ""
 		},
 		add() {
-			this.myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
-				keyboard: false
-			})
+			if (Object.keys(this.myModal).length === 0) {
+				this.myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+					keyboard: false
+				})
+			}
 
 			this.myModal.show()
 		},
