@@ -16,7 +16,6 @@ exports.view = [
     async (req, res, next) => {
         let playList = await playListModel.getAll()
         log.debug("home-view", playList)
-
         res.send({status: `OK`, data: playList})
         res.end()
     }

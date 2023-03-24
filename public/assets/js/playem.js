@@ -1,11 +1,8 @@
 // configuration
-
 var DEFAULT_PLAY_TIMEOUT = 10000
-
 window.$ = window.$ || function () { return window.$ }
 
 // utility functions
-
 if (undefined == window.console) { window.console = {log: function () {}} }
 
 /**
@@ -117,7 +114,6 @@ function Loader () {
 window.loader = new Loader()
 
 // EventEmitter
-
 function EventEmitter () {
 	this._eventListeners = {}
 }
@@ -198,10 +194,10 @@ function Playem (playemPrefs) {
 		var volume = 1
 
 		/**
-	 * @memberof Playem.prototype
-	 * @param {string} key Key of the Playem parameter to set.
-	 * @param {any} val Value to affect to that `key`.
-	 */
+		 * @memberof Playem.prototype
+		 * @param {string} key Key of the Playem parameter to set.
+		 * @param {any} val Value to affect to that `key`.
+		 */
 		this.setPref = function (key, val) {
 			playemPrefs[key] = val
 		}
@@ -461,6 +457,7 @@ function Playem (playemPrefs) {
 			setVolume: setVolume,
 			searchTracks: searchTracks
 		}
+		
 		// return exportedMethods;
 		for (i in exportedMethods) { this[i] = exportedMethods[i] }
 	}

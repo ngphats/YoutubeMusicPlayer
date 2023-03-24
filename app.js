@@ -7,6 +7,7 @@ const session = require("express-session");
 const cors = require('cors')
 const app = express();
 const http = require('http');
+const https = require('https');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 
@@ -58,7 +59,6 @@ app.use(router)
 // setting cors
 app.use(cors({
     origin:[
-        "http://192.168.1.10:8081",
         "https://www.youtube.com/*",
         "https://www.google.com/*"
     ], 
@@ -95,3 +95,12 @@ const server_port = process.env.SERVER_PORT;
 server.listen(server_port, function () {
     console.log(`connecting with port:${server_port}`);
 });
+
+// // This line is from the Node.js HTTPS documentation.
+// var options = {
+//     key: fs.readFileSync('./path/test-ssl.local.key'),
+//     cert: fs.readFileSync('./path/test-ssl.local.crt')
+// };
+
+// // Create an HTTPS service identical to the HTTP service.
+// https.createServer(options, app).listen(4433);
