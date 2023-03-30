@@ -583,13 +583,14 @@ function YoutubePlayer() {
 
 (function () {
 	//includeJS("https://www.youtube.com/player_api");
-	var EVENT_MAP = {
-		0: "onEnded",
-		1: "onPlaying",
-		2: "onPaused",
-		//  3: "onBuffering", // youtube state: buffering
-		//  5: "onBuffering", // youtube state: cued
-	},
+	var
+		EVENT_MAP = {
+			0: "onEnded",
+			1: "onPlaying",
+			2: "onPaused",
+			//  3: "onBuffering", // youtube state: buffering
+			//  5: "onBuffering", // youtube state: cued
+		},
 		SDK_URL = "https://apis.google.com/js/client.js?onload=initYT",
 		SDK_LOADED = false,
 		PLAYER_API_SCRIPT = "https://www.youtube.com/iframe_api",
