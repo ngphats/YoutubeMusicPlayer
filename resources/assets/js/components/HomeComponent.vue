@@ -1,23 +1,34 @@
 <template>
 	<div class="container">
+		
+		<div class="row justify-content-center">
+			<div class="col-md-6">
+				<div :class="{ thumbnail: true, control: true }">
+					<div class="control-player">
+						<input type="text" v-model="search_track_text"/>
+						<button type="button" class="btn btn-primary btn-sm" @click="search">Search</button>
+					</div>
+				</div>
+			</div>
+		</div>
 
 		<div class="row justify-content-center">
 			<div class="col-md-6">
 				<div :class="{ thumbnail: true, control: true }">
-					
 					<div class="select-player">
-						<select class="form-select" aria-label="Default select example" disabled>
-							<option value="0">This Device</option>
-							<option value="1">192.168.1.112</option>
+						<select class="form-select" v-model="player_selected">
+							<option v-for="option in list_player_active" :key="option.socket_id" :value="option.socket_id">
+								{{ option.socket_id === socket.id ? "This Device" : option.player_ip }}
+							</option>
 						</select>
 					</div>
 
 					<div class="control-player">
 						<button type="button" class="btn btn-primary btn-sm" @click="play()">Play</button>
 						<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
+						<button type="button" class="btn btn-primary btn-sm" @click="stop">Stop</button>
 						<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
-
-						<button type="button" class="btn btn-primary btn-sm" @click="tracks">Debug</button>
+						<!-- <button type="button" class="btn btn-primary btn-sm" @click="tracks">Debug</button> -->
 					</div>
 				</div>
 			</div>
@@ -28,7 +39,7 @@
 				<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }">
 					<a @click="playTrack(track.ytid)"><img :src="track.thumbnail" style="width:100%"></a>
 					<div class="caption">
-						<h6>{{ track.title }}</h6>
+						<p class="title">{{ track.title }}</p>
 						<p>{{ track.message }}</p>
 					</div>
 				</div>
@@ -77,7 +88,6 @@ import io from 'socket.io-client'
 export default {
 	data() {
 		return {
-			socketID: "",
 			socket: {},
 			playList: [],
 			tmpFormLink: "",
@@ -86,7 +96,9 @@ export default {
 			myModal: {},
 			playem: {},
 			activeTrack: "",
-			listPlayerActive: []
+			search_track_text: "",
+			list_player_active: [],
+			player_selected: ""
 		};
 	},
 	created() {
@@ -95,25 +107,35 @@ export default {
 		})
 
 		this.socket.on('connect', () => {
-			console.log(this.socket)
+			this.player_selected = this.socket.id
 			this.socket.emit("player_active")
 		})
 
-		this.socket.on('list_player_active', data => {
-			console.log({data})
+		this.socket.on('list_player_active', params => {
+			this.list_player_active = params
 		})
 
-        this.socket.on('add_new_track', data => {
-			this.addTrack(data)
-			this.playList.push(data)
+        this.socket.on('add_new_track', params => {
+			this.addTrack(params)
+			this.playList.push(params)
 		})
 
-        this.socket.on('player_connect', data => {
-			console.log({data})
+        this.socket.on('play', params => {
+			this.playem.play(params.track_idx || 0);
 		})
 
-        this.socket.on('player_disconnect', data => {
-			console.log({data})
+		this.socket.on('on_track_change', params => {
+			if (params.player == this.player_selected) {
+				this.activeTrack = params.track_active
+			}
+		})
+
+        this.socket.on('player_connect', params => {
+			console.log({params})
+		})
+
+        this.socket.on('player_disconnect', params => {
+			console.log({params})
 		})
 
 		// init playem and players
@@ -122,8 +144,12 @@ export default {
 			playerContainer: document.getElementById("playem_video"),
 		})
 
-		this.playem.on("onTrackChange", (data) => {
-			this.activeTrack = data.trackId
+		this.playem.on("onTrackChange", (params) => {
+			this.activeTrack = params.trackId
+			this.socket.emit("on_track_change", {
+				player: this.socket.id,
+				track_active: params.trackId
+			});			
 		})
 
 		// function logEvent (evtName) {
@@ -205,7 +231,14 @@ export default {
 			this.playem.addTrackByUrl(track.url)
 		},
 		play(ind) {
-			this.playem.play(ind);
+			if (this.player_selected === this.socket.id) {
+				this.playem.play(ind || 0);
+			} else {
+				this.socket.emit("play", {
+					player_selected: this.player_selected,
+					track_idx: ind || 0
+				});
+			}
 		},
 		playTrack(selectTrack) {
 			if (undefined == selectTrack) {
@@ -244,6 +277,15 @@ export default {
 				console.log(response.data)
 			})
 		},
+		search() {
+			let keySearch = this.search_track_text		
+			this.playem.searchTracks(keySearch, (item) => {
+				console.log(item)
+			})
+		},
+		stop() {
+			this.playem.stop()
+		}
 	},
 };
 </script>
@@ -282,5 +324,8 @@ export default {
 	.thumbnail.control .select-player {
 		float: left;
     	padding: 4px 12px 0 5px;
+	}
+	.thumbnail .title {
+		font-weight: 500;
 	}
 </style>

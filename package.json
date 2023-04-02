@@ -58,7 +58,8 @@
     "ignore": [
       "**/test/**",
       "**/docs/**",
-      "**/tmp/**"
+      "**/tmp/**",
+      "**/resources/**"
     ],
     "delay": 2500
   }
