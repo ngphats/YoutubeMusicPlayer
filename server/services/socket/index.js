@@ -76,10 +76,9 @@ let events = (io, dbAdmin) => {
 
     io.on('connection', (socket) => {
         socket.on('player_active', () => {
-            console.log(`Player active`);
-            console.log(`IP: ${socket.request.connection.remoteAddress}`);
-            console.log(`SocketID: ${socket.id}`)
-
+            // console.log(`Player active`);
+            // console.log(`IP: ${socket.request.connection.remoteAddress}`);
+            // console.log(`SocketID: ${socket.id}`)
             lsPlayerActive.push({
                 socket_id: socket.id,
                 player_ip: socket.request.connection.remoteAddress,
@@ -110,31 +109,6 @@ let events = (io, dbAdmin) => {
         socket.on('on_track_change', params => {
             socket.broadcast.emit('on_track_change', params)
         })
-
-        /*
-        console.log(`Firebase listen..`)
-        const collectionRef = dbAdmin.collection('koi-streaming')
-        collectionRef.onSnapshot((querySnapshot) => {
-            querySnapshot.docChanges().forEach((change) => {
-                if (change.type === 'added') {
-                    const docData = change.doc.data()
-                    console.log('document added:', docData)
-                    io.sockets.emit('add_new_track', docData)
-                }
-    
-                if (change.type === 'modified') {
-                    const docData = change.doc.data();
-                    console.log('document modified:', docData);
-                    socket.broadcast.emit('add_new_track', docData)
-                }
-    
-                if (change.type === 'removed') {
-                    const docData = change.doc.data();
-                    console.log('document removed:', docData);
-                }
-            });
-        });
-        */
     })
 }
 
