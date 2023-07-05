@@ -13,13 +13,29 @@ const io = require('socket.io')(server);
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
-const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-})
-const dbAdmin = admin.firestore();
+// const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
+// admin.initializeApp({
+//     credential: admin.credential.cert(serviceAccount)
+// })
 
-const router = require("./server/router");
+const firebaseConfig = {
+    apiKey: "AIzaSyASmiJObRSfIJAIkOh98E8a89Wel9ILBj0",
+    authDomain: "phatnn-firstproject.firebaseapp.com",
+    projectId: "phatnn-firstproject",
+    storageBucket: "phatnn-firstproject.appspot.com",
+    messagingSenderId: "760386135946",
+    appId: "1:760386135946:web:35a3a3b1637e294dc10a73",
+    measurementId: "G-KCH1HXW8GY"
+  };
+  
+// Initialize Firebase
+admin.initializeApp(firebaseConfig);
+
+const dbAdmin = admin.firestore();
+const { getAuth } = require('firebase-admin/auth');
+
+const routerView = require("./server/router");
+const routerApi = require("./server/router/api");
 const service = require('./server/services');
 
 app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
@@ -54,21 +70,51 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 
 // Routes
-app.use(router)
+app.use(routerView);
+
+const authorizationJWT = async (req, res, next) => {
+    // console.log({ authorization: req.headers.authorization });
+    const authorizationHeader = req.headers.authorization;
+
+    let bodyParams = req.body;
+    let headerParams = req.headers;
+
+    console.log({bodyParams});
+    console.log({headerParams});
+  
+    if (authorizationHeader) {
+      const accessToken = authorizationHeader.split(' ')[1];
+
+      console.log({accessToken})
+  
+      getAuth()
+        .verifyIdToken(accessToken)
+        .then((decodedToken) => {
+          console.log({ decodedToken });
+          res.locals.uid = decodedToken.uid;
+          next();
+        })
+        .catch((err) => {
+          console.log({ err });
+          return res.status(403).json({ message: 'Forbidden', error: err });
+        });
+    } else {
+        // next();
+        return res.status(401).json({ message: 'Unauthorized' });
+    }
+};
+
+app.use(authorizationJWT);
+
+// Routes
+app.use(routerApi);
 
 // setting cors
-app.use(cors({
-    origin:[
-        "https://www.youtube.com/*",
-        "https://www.google.com/*"
-    ], 
-    credentials: true
-}));
+app.use(cors());
 
-// app.get("/html", function (req, res) {
-//     let html = fs.readFileSync(resolve("./public/" + "index.html"), "utf-8");
-//     res.send(html);
-// });
+app.get("/test", function (req, res) {
+    return res.status(200).json({ message: 'Hello world!' });
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -95,12 +141,3 @@ const server_port = process.env.SERVER_PORT;
 server.listen(server_port, function () {
     console.log(`connecting with port:${server_port}`);
 });
-
-// // This line is from the Node.js HTTPS documentation.
-// var options = {
-//     key: fs.readFileSync('./path/test-ssl.local.key'),
-//     cert: fs.readFileSync('./path/test-ssl.local.crt')
-// };
-
-// // Create an HTTPS service identical to the HTTP service.
-// https.createServer(options, app).listen(4433);

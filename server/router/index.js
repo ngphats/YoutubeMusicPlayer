@@ -6,6 +6,6 @@ router.get("/", homeController.home)
 
 router.post("/view", homeController.view)
 router.post("/add", homeController.add)
-router.post("/update", homeController.update)
+// router.post("/update", homeController.update)
 
 module.exports = router
