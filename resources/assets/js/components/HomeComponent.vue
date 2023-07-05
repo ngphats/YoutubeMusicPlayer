@@ -5,8 +5,9 @@
 			<div class="col-md-6">
 				<div :class="{ thumbnail: true, control: true }">
 					<div class="control-player">
-						<input type="text" v-model="search_track_text"/>
-						<button type="button" class="btn btn-primary btn-sm" @click="search">Search</button>
+						<input type="text" @click="onSearch" placeholder="Search"/>
+						<!-- <input type="text" v-model="search_key"/> -->
+						<!-- <button type="button" class="btn btn-primary btn-sm" @click="search">Search</button> -->
 					</div>
 				</div>
 			</div>
@@ -46,11 +47,11 @@
 			</div>
 		</div>
 		
-		<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal fade" id="modalAdd" tabindex="-1" role="dialog" aria-labelledby="modalAddLabel" aria-hidden="true">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="exampleModalLabel">Add</h5>
+						<h5 class="modal-title" id="modalAddLabel">Add</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="formClearSubmit">
 						<span aria-hidden="true">&times;</span>
 						</button>
@@ -58,11 +59,23 @@
 					<div class="modal-body">
 						<form>
 						<div class="form-group">
+							
 							<label for="recipient-name" class="col-form-label">URL Youtube:</label>
+							
 							<input type="text" class="form-control" id="recipient-name" v-model="tmpFormLink">
+							
 							<div class="invalid-feedback" style="display: block" v-show="errorTmpFormLink.length > 0">
 								{{errorTmpFormLink}}
 							</div>
+
+							<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }" v-show="track.ytid == 'J0AXbzJnCt4'">
+								<a @click="playTrack(track.ytid)"><img :src="track.thumbnail" style="width:100%"></a>
+								<div class="caption">
+									<p class="title">{{ track.title }}</p>
+									<p>{{ track.message }}</p>
+								</div>
+							</div>
+
 						</div>
 						<div class="form-group">
 							<label for="message-text" class="col-form-label">Message:</label>
@@ -76,6 +89,41 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="modal" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="modalSearchLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-scrollable" role="document">
+				<div class="modal-content">
+					
+					<div class="modal-header">
+						<div class="form-group">
+							<input type="text" class="form-control" id="search-key" v-model="search_key" @input="searchTyping">
+						</div>
+
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="formClearSubmit">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+
+					<div class="modal-body" style="height: 600px">
+						<div v-for="track in searchResultList" :key="track.id" :class="{ thumbnail: true }">
+							<a><img :src="track.img" style="width:100%"></a>
+
+							<div class="caption">
+								<p class="title">{{ track.title }}</p>
+								<p>{{ track.message }}</p>
+							</div>
+
+							<footer>
+								<a @click="chooseTrack(track)">
+									<span>add</span>
+								</a>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</div>
+
 		</div>
 
 	</div>
@@ -93,12 +141,15 @@ export default {
 			tmpFormLink: "",
 			errorTmpFormLink: "",
 			tmpFormMessage: "",
-			myModal: {},
+			myModalAdd: {},
+			myModalSearch: {},
 			playem: {},
 			activeTrack: "",
-			search_track_text: "",
 			list_player_active: [],
-			player_selected: ""
+			player_selected: "",
+			search_key: "",
+			delayTimerSearch: null,
+			searchResultList: []
 		};
 	},
 	created() {
@@ -162,6 +213,11 @@ export default {
 	mounted() {
 		this.view()
 	},
+	watch: {
+		// searchResultList(newQuestion, oldQuestion) {
+		// 	console.log({newQuestion, oldQuestion})
+		// }
+	},
 	methods: {
 		view() {
 			axios.post(`/view`).then((response) => {
@@ -180,52 +236,15 @@ export default {
 		disconnect() {
 			this.socket.disconnect();
 		},
-		formAddSubmit() {
-			if (null !== this.tmpFormLink && this.tmpFormLink.length > 0) {
-				this.playem.getTrackInfo(this.tmpFormLink, (item) => {
-					if (undefined === item) {
-						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại URL."
-					} else {
-						let trackInfo = {
-							ytid: item.id,
-							thumbnail: item.img,
-							title: item.title,
-							url: item.url,
-							message: this.tmpFormMessage
-						}
-
-						axios.post(`/add`, trackInfo).then((response) => {
-							let { status, data } = response.data
-							if (typeof status === "string" && status === "OK") {
-								this.playList.push(data)
-								this.addTrack(data)
-								
-								// add for all user..
-								this.socket.emit("add_new_track", data);
-							}
-						})
-
-						this.formClearSubmit()
-						this.myModal.hide()
-					}
-				})
-			} else {
-				this.errorTmpFormLink = "Xin mời nhập URL bài hát yêu thích của bạn."
-			}
-		},
-		formClearSubmit() {			
-			this.tmpFormLink = ""
-			this.errorTmpFormLink = ""
-			this.tmpFormMessage = ""
-		},
 		add() {
-			if (Object.keys(this.myModal).length === 0) {
-				this.myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
-					keyboard: false
+			if (Object.keys(this.myModalAdd).length === 0) {
+				this.myModalAdd = new bootstrap.Modal(document.getElementById('modalAdd'), {
+					keyboard: true,
+					focus: true
 				})
 			}
 
-			this.myModal.show()
+			this.myModalAdd.show()
 		},
 		addTrack(track) {
 			this.playem.addTrackByUrl(track.url)
@@ -253,13 +272,13 @@ export default {
 			this.play(indSelectTrack)
 		},
 		tracks() {
-			let selectTrack = "_3-uD0PvM7g"
-			let snoop = '_Rks2oCRS88'
+			// let selectTrack = "_3-uD0PvM7g"
+			// let snoop = '_Rks2oCRS88'
 
 			// let tracks = this.playem.getQueue()
-			let tracks = this.playem.searchTracks(snoop, (item) => {
-				console.log(item)
-			})
+			// let tracks = this.playem.searchTracks(snoop, (item) => {
+			// 	console.log(item)
+			// })
 
 			// console.log(tracks)
 			// let indSelectTrack = tracks.findIndex(item => {
@@ -277,14 +296,111 @@ export default {
 				console.log(response.data)
 			})
 		},
+		formAddSubmit() {
+			if (null !== this.tmpFormLink && this.tmpFormLink.length > 0) {
+				this.playem.getTrackInfo(this.tmpFormLink, (item) => {
+					if (undefined === item) {
+						this.errorTmpFormLink = "Không tìm thấy video, vui lòng kiểm tra lại URL."
+					} else {
+						let trackInfo = {
+							ytid: item.id,
+							thumbnail: item.img,
+							title: item.title,
+							url: item.url,
+							message: this.tmpFormMessage
+						}
+
+						axios.post(`/add`, trackInfo).then((response) => {
+							let { status, data } = response.data
+							if (typeof status === "string" && status === "OK") {
+								this.playList.push(data)
+								this.addTrack(data)
+								
+								// add for all user..
+								this.socket.emit("add_new_track", data);
+							}
+						})
+
+						this.formClearSubmit()
+						
+						this.myModalAdd.hide()
+					}
+				})
+			} else {
+				this.errorTmpFormLink = "Xin mời nhập URL bài hát yêu thích của bạn."
+			}
+		},
+		formClearSubmit() {			
+			this.tmpFormLink = ""
+			this.errorTmpFormLink = ""
+			this.tmpFormMessage = ""
+			this.search_key = ""
+			this.delayTimerSearch = null
+			this.searchResultList = []
+		},
 		search() {
-			let keySearch = this.search_track_text		
+			let keySearch = this.search_key
+			if (keySearch.length == 0) {
+				return
+			}
+
+			this.searchResultList = []
+
 			this.playem.searchTracks(keySearch, (item) => {
-				console.log(item)
+				if (undefined == item) {
+					return
+				}
+
+				this.searchResultList.push(item)
 			})
 		},
 		stop() {
 			this.playem.stop()
+		},
+		onSearch() {
+			if (Object.keys(this.myModalSearch).length === 0) {
+				this.myModalSearch = new bootstrap.Modal(document.getElementById('modalSearch'), {
+					keyboard: true
+				})
+			}
+
+			const modalSearch = document.getElementById('modalSearch')
+			modalSearch.addEventListener(`show.bs.modal`, () => {
+				console.log(`event show modal trigger..`)
+			})
+
+			this.myModalSearch.show()
+		},
+		searchTyping() {
+			clearTimeout(this.delayTimerSearch)
+			this.delayTimerSearch = setTimeout(this.search, 1000)
+		},
+		chooseTrack(track) {
+			let trackInfo = {
+				ytid: track.id,
+				thumbnail: track.img,
+				title: track.title,
+				url: track.url,
+				message: this.tmpFormMessage || ""
+			}
+
+			axios.post(`/add`, trackInfo).then((response) => {
+				let { status, data } = response.data
+				if (typeof status === "string" && status === "OK") {
+					this.playList.push(data)
+					this.addTrack(data)
+					
+					// add for all user..
+					this.socket.emit("add_new_track", data);
+				}
+
+				this.formClearSubmit()
+				this.myModalSearch.hide()
+			}).catch(error => {
+				this.formClearSubmit()			
+				this.myModalSearch.hide()
+				console.log(error.message)
+			})
 		}
 	},
 };

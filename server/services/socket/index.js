@@ -109,6 +109,10 @@ let events = (io, dbAdmin) => {
         socket.on('on_track_change', params => {
             socket.broadcast.emit('on_track_change', params)
         })
+        
+        socket.on('on_device_change', params => {
+            socket.broadcast.emit('on_track_change', params)
+        })
     })
 }
 
