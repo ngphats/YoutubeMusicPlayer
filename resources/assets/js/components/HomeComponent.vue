@@ -29,6 +29,7 @@
 						<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
 						<button type="button" class="btn btn-primary btn-sm" @click="stop">Stop</button>
 						<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
+						<button type="button" class="btn btn-primary btn-sm" @click="update">Update</button>
 						<!-- <button type="button" class="btn btn-primary btn-sm" @click="tracks">Debug</button> -->
 					</div>
 				</div>
@@ -292,6 +293,9 @@ export default {
 			this.playem.pause();
 		},
 		update() {
+
+			console.log(`update..`)
+
 			axios.post(`/update`).then((response) => {
 				console.log(response.data)
 			})

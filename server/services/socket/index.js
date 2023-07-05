@@ -96,6 +96,8 @@ let events = (io, dbAdmin) => {
 
         socket.on('hello', data => {
             socket.broadcast.emit('message-test1', { text: 'From broadcast: Hello world' })
+
+            console.log('flutter app request..');
         })
 
         socket.on('add_new_track', data => {

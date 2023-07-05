@@ -48,8 +48,8 @@ exports.add = [
 
 exports.update = [
     async (req, res, next) => {
-        await playListModel.update(`ZhLltFkCSyjF4jDb0VFJ`, {play_status: 'playing'})
-        res.send({status: `OK`})
+        // await playListModel.update(`ZhLltFkCSyjF4jDb0VFJ`, {play_status: 'playing'})
+        res.status(200).send({message: `OK`})
         res.end()
     }
 ]
