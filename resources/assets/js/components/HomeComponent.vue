@@ -320,7 +320,7 @@ export default {
 								this.playList.push(data)
 								this.addTrack(data)
 								
-								// add for all user..
+								// Add for all user..
 								this.socket.emit("add_new_track", data);
 							}
 						})
