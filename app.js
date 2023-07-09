@@ -10,6 +10,8 @@ const http = require('http');
 const https = require('https');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
+const { graphqlHTTP } = require("express-graphql")
+const { buildSchema } = require("graphql")
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
@@ -45,6 +47,30 @@ app.use('/', express.static(__dirname + '/node_modules/@popperjs/core/dist/umd')
 
 // const resolve = (file) => path.resolve(__dirname, file);
 // app.use("/dist", express.static(resolve("./dist")));
+
+
+// Construct a schema, using GraphQL schema language
+var schema = buildSchema(`
+  type Query {
+    hello: String
+  }
+`)
+
+// The root provides a resolver function for each API endpoint
+var root = {
+  hello: () => {
+    return "Hello world!"
+  },
+}
+
+app.use(
+  "/graphql",
+  graphqlHTTP({
+    schema: schema,
+    rootValue: root,
+    graphiql: true,
+  })
+)
 
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({ extended: true }));
