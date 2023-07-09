@@ -15,23 +15,23 @@ const { buildSchema } = require("graphql")
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
-// const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
-// admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount)
-// })
+const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+})
 
-const firebaseConfig = {
-    apiKey: "AIzaSyASmiJObRSfIJAIkOh98E8a89Wel9ILBj0",
-    authDomain: "phatnn-firstproject.firebaseapp.com",
-    projectId: "phatnn-firstproject",
-    storageBucket: "phatnn-firstproject.appspot.com",
-    messagingSenderId: "760386135946",
-    appId: "1:760386135946:web:35a3a3b1637e294dc10a73",
-    measurementId: "G-KCH1HXW8GY"
-  };
+// const firebaseConfig = {
+//     apiKey: "AIzaSyASmiJObRSfIJAIkOh98E8a89Wel9ILBj0",
+//     authDomain: "phatnn-firstproject.firebaseapp.com",
+//     projectId: "phatnn-firstproject",
+//     storageBucket: "phatnn-firstproject.appspot.com",
+//     messagingSenderId: "760386135946",
+//     appId: "1:760386135946:web:35a3a3b1637e294dc10a73",
+//     measurementId: "G-KCH1HXW8GY"
+//   };
   
-// Initialize Firebase
-admin.initializeApp(firebaseConfig);
+// // Initialize Firebase
+// admin.initializeApp(firebaseConfig);
 
 const dbAdmin = admin.firestore();
 const { getAuth } = require('firebase-admin/auth');
@@ -102,11 +102,11 @@ const authorizationJWT = async (req, res, next) => {
     // console.log({ authorization: req.headers.authorization });
     const authorizationHeader = req.headers.authorization;
 
-    let bodyParams = req.body;
-    let headerParams = req.headers;
+    // let bodyParams = req.body;
+    // let headerParams = req.headers;
 
-    console.log({bodyParams});
-    console.log({headerParams});
+    // console.log({bodyParams});
+    // console.log({headerParams});
   
     if (authorizationHeader) {
       const accessToken = authorizationHeader.split(' ')[1];
@@ -125,8 +125,8 @@ const authorizationJWT = async (req, res, next) => {
           return res.status(403).json({ message: 'Forbidden', error: err });
         });
     } else {
-        // next();
-        return res.status(401).json({ message: 'Unauthorized' });
+        next();
+        // return res.status(401).json({ message: 'Unauthorized' });
     }
 };
 

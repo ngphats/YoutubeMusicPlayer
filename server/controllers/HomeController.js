@@ -33,6 +33,7 @@ exports.add = [
         let trackParams = req.body
         log.debug("home-add", {trackParams})
         if (trackParams.title && trackParams.url) {
+            console.log({trackParams});
             // trackParams.play_status = 'waiting'
             trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
             await playListModel.add(trackParams)
@@ -73,5 +74,17 @@ exports.sort = [
 
         res.send({status: `OK`, data: playList})
         res.end()
+    }
+]
+
+exports.testapi = [
+    async (req, res, next) => {
+        
+        let trackParams = req.body
+        
+        console.log(`api request ok..`);
+        console.log({trackParams});
+
+        return res.status(200).send({message: `done`});
     }
 ]
