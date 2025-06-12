@@ -164,6 +164,11 @@ app.use(function (err, req, res, next) {
 service.socket.events(io, dbAdmin);
 
 const server_port = process.env.SERVER_PORT;
-server.listen(server_port, function () {
-    console.log(`connecting with port:${server_port}`);
-});
+
+if (require.main === module) {
+    server.listen(server_port, function () {
+        console.log(`connecting with port:${server_port}`);
+    });
+}
+
+module.exports = app;
