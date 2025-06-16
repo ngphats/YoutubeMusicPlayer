@@ -144,7 +144,16 @@
 						</div>
 						
 						<div class="search-results" style="min-height: 400px;">
-							<div v-if="searchResultList.length === 0 && search_key.length > 0" class="text-center p-5 text-muted">
+							<!-- Loading indicator -->
+							<div v-if="isSearching" class="text-center p-5">
+								<div class="spinner-border text-primary" role="status">
+									<span class="visually-hidden">Loading...</span>
+								</div>
+								<p class="mt-3 text-muted">Đang tìm kiếm nhạc...</p>
+							</div>
+							
+							<!-- No results states -->
+							<div v-else-if="searchResultList.length === 0 && search_key.length > 0" class="text-center p-5 text-muted">
 								<i class="fas fa-search fa-3x mb-3"></i>
 								<p>No results found. Try different keywords.</p>
 							</div>
@@ -153,6 +162,7 @@
 								<p>Start typing to search for music...</p>
 							</div>
 							
+							<!-- Search results -->
 							<div v-for="track in searchResultList" :key="track.id" class="search-result-item mb-3">
 								<div class="card h-100">
 									<div class="row g-0">
@@ -202,7 +212,8 @@ export default {
 			player_selected: "",
 			search_key: "",
 			delayTimerSearch: null,
-			searchResultList: []
+			searchResultList: [],
+			isSearching: false
 		};
 	},
 	created() {
@@ -393,21 +404,30 @@ export default {
 			this.search_key = ""
 			this.delayTimerSearch = null
 			this.searchResultList = []
+			this.isSearching = false
 		},
 		search() {
 			let keySearch = this.search_key
 			if (keySearch.length == 0) {
+				this.isSearching = false
 				return
 			}
 
 			this.searchResultList = []
+			this.isSearching = true
 
 			this.playem.searchTracks(keySearch, (item) => {
 				if (undefined == item) {
+					this.isSearching = false
 					return
 				}
 
 				this.searchResultList.push(item)
+				
+				// Set loading to false after first result to indicate search is working
+				if (this.searchResultList.length === 1) {
+					this.isSearching = false
+				}
 			})
 		},
 		stop() {
@@ -429,6 +449,11 @@ export default {
 		},
 		searchTyping() {
 			clearTimeout(this.delayTimerSearch)
+			// Reset loading if user is typing quickly
+			if (this.search_key.length === 0) {
+				this.isSearching = false
+				this.searchResultList = []
+			}
 			this.delayTimerSearch = setTimeout(this.search, 1000)
 		},
 		chooseTrack(track) {
