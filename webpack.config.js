@@ -6,9 +6,11 @@ module.exports = {
 		app: './resources/assets/js/app.js'
 	},
 	output: {
-		filename: '[name].[contenthash].js',
+		filename: '[name].js',
 		path: path.resolve(__dirname, './public/assets/js'),
-		clean: true
+		clean: {
+			keep: 'playem.js'
+		}
 	},
 	resolve: {
 		extensions: ['.js', '.vue', '.json'],
@@ -52,7 +54,6 @@ module.exports = {
 	],
 	optimization: {
 		moduleIds: 'deterministic',
-		runtimeChunk: 'single',
 		splitChunks: {
 			cacheGroups: {
 				vendor: {
