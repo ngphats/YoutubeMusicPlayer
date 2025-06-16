@@ -1,130 +1,182 @@
 <template>
 	<div class="container">
 		
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<div :class="{ thumbnail: true, control: true }">
-					<div class="control-player">
-						<input type="text" @click="onSearch" placeholder="Search"/>
-						<!-- <input type="text" v-model="search_key"/> -->
-						<!-- <button type="button" class="btn btn-primary btn-sm" @click="search">Search</button> -->
+		<div class="row justify-content-center mb-4">
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-body">
+						<div class="input-group">
+							<input type="text" class="form-control form-control-lg" @click="onSearch" placeholder="🔍 Search for music..." readonly/>
+							<button class="btn btn-primary" type="button" @click="onSearch">
+								<i class="fas fa-search"></i> Search
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row justify-content-center mb-4">
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title mb-0">🎵 Player Controls</h5>
+					</div>
+					<div class="card-body">
+						<div class="row align-items-center">
+							<div class="col-md-6 mb-3 mb-md-0">
+								<label class="form-label">Select Device:</label>
+								<select class="form-select" v-model="player_selected">
+									<option v-for="option in list_player_active" :key="option.socket_id" :value="option.socket_id">
+										{{ option.socket_id === socket.id ? "📱 This Device" : "🖥️ " + option.player_ip }}
+									</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+									<button type="button" class="btn btn-success btn-sm" @click="play()">
+										<i class="fas fa-play"></i> Play
+									</button>
+									<button type="button" class="btn btn-info btn-sm" @click="next">
+										<i class="fas fa-step-forward"></i> Next
+									</button>
+									<button type="button" class="btn btn-danger btn-sm" @click="stop">
+										<i class="fas fa-stop"></i> Stop
+									</button>
+									<button type="button" class="btn btn-primary btn-sm" @click="add">
+										<i class="fas fa-plus"></i> Add
+									</button>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<div :class="{ thumbnail: true, control: true }">
-					<div class="select-player">
-						<select class="form-select" v-model="player_selected">
-							<option v-for="option in list_player_active" :key="option.socket_id" :value="option.socket_id">
-								{{ option.socket_id === socket.id ? "This Device" : option.player_ip }}
-							</option>
-						</select>
+			<div class="col-md-8">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title mb-0">🎶 Playlist ({{ playList.length }} songs)</h5>
 					</div>
-
-					<div class="control-player">
-						<button type="button" class="btn btn-primary btn-sm" @click="play()">Play</button>
-						<button type="button" class="btn btn-primary btn-sm" @click="next">Next</button>
-						<button type="button" class="btn btn-primary btn-sm" @click="stop">Stop</button>
-						<button type="button" class="btn btn-primary btn-sm" @click="add">Add</button>
-						<button type="button" class="btn btn-primary btn-sm" @click="update">Update</button>
-						<!-- <button type="button" class="btn btn-primary btn-sm" @click="tracks">Debug</button> -->
+					<div class="card-body p-0">
+						<div v-if="playList.length === 0" class="p-4 text-center text-muted">
+							<i class="fas fa-music fa-3x mb-3"></i>
+							<p>No songs in playlist. Add some music to get started!</p>
+						</div>
+						<div v-for="(track, index) in playList" :key="track.id" :class="{ 'song-item': true, 'active-song': track.ytid == activeTrack }">
+							<div class="d-flex align-items-center p-3">
+								<div class="flex-shrink-0">
+									<img :src="track.thumbnail" class="song-thumbnail" @click="playTrack(track.ytid)" style="cursor: pointer;">
+									<div class="song-number">{{ index + 1 }}</div>
+								</div>
+								<div class="flex-grow-1 ms-3">
+									<h6 class="song-title mb-1" @click="playTrack(track.ytid)" style="cursor: pointer;">{{ track.title }}</h6>
+									<p class="song-message mb-0 text-muted">{{ track.message || 'No message' }}</p>
+									<small class="text-muted">Added: {{ formatDate(track.add_datetime) }}</small>
+								</div>
+								<div class="flex-shrink-0">
+									<button class="btn btn-sm btn-outline-primary" @click="playTrack(track.ytid)">
+										<i class="fas fa-play"></i>
+									</button>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-
-		<div class="row justify-content-center">
-			<div class="col-md-6">
-				<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }">
-					<a @click="playTrack(track.ytid)"><img :src="track.thumbnail" style="width:100%"></a>
-					<div class="caption">
-						<p class="title">{{ track.title }}</p>
-						<p>{{ track.message }}</p>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<div class="modal fade" id="modalAdd" tabindex="-1" role="dialog" aria-labelledby="modalAddLabel" aria-hidden="true">
-			<div class="modal-dialog" role="document">
+			<div class="modal fade" id="modalAdd" tabindex="-1" aria-labelledby="modalAddLabel" aria-hidden="true">
+			<div class="modal-dialog">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="modalAddLabel">Add</h5>
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="formClearSubmit">
-						<span aria-hidden="true">&times;</span>
-						</button>
+						<h5 class="modal-title" id="modalAddLabel">🎵 Add New Song</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="formClearSubmit"></button>
 					</div>
 					<div class="modal-body">
 						<form>
-						<div class="form-group">
-							
-							<label for="recipient-name" class="col-form-label">URL Youtube:</label>
-							
-							<input type="text" class="form-control" id="recipient-name" v-model="tmpFormLink">
-							
-							<div class="invalid-feedback" style="display: block" v-show="errorTmpFormLink.length > 0">
-								{{errorTmpFormLink}}
-							</div>
-
-							<div v-for="track in playList" :key="track.id" :class="{ thumbnail: true, active_track: track.ytid == activeTrack }" v-show="track.ytid == 'J0AXbzJnCt4'">
-								<a @click="playTrack(track.ytid)"><img :src="track.thumbnail" style="width:100%"></a>
-								<div class="caption">
-									<p class="title">{{ track.title }}</p>
-									<p>{{ track.message }}</p>
+							<div class="mb-3">
+								<label for="recipient-name" class="form-label">YouTube URL:</label>
+								<div class="input-group">
+									<span class="input-group-text">🔗</span>
+									<input type="text" class="form-control" id="recipient-name" v-model="tmpFormLink" placeholder="https://www.youtube.com/watch?v=...">
+								</div>
+								<div class="invalid-feedback d-block" v-show="errorTmpFormLink.length > 0">
+									{{errorTmpFormLink}}
 								</div>
 							</div>
-
-						</div>
-						<div class="form-group">
-							<label for="message-text" class="col-form-label">Message:</label>
-							<textarea class="form-control" id="message-text" v-model="tmpFormMessage"></textarea>
-						</div>
+							
+							<div class="mb-3">
+								<label for="message-text" class="form-label">Message (optional):</label>
+								<div class="input-group">
+									<span class="input-group-text">💬</span>
+									<textarea class="form-control" id="message-text" v-model="tmpFormMessage" rows="2" placeholder="Add a message for this song..."></textarea>
+								</div>
+							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-dismiss="modal" @click="formClearSubmit">Close</button>
-						<button type="button" class="btn btn-primary" @click="formAddSubmit">Add</button>
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="formClearSubmit">
+							<i class="fas fa-times"></i> Cancel
+						</button>
+						<button type="button" class="btn btn-primary" @click="formAddSubmit">
+							<i class="fas fa-plus"></i> Add Song
+						</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="modal" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="modalSearchLabel" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-scrollable" role="document">
+		<div class="modal fade" id="modalSearch" tabindex="-1" aria-labelledby="modalSearchLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-scrollable modal-lg">
 				<div class="modal-content">
-					
 					<div class="modal-header">
-						<div class="form-group">
-							<input type="text" class="form-control" id="search-key" v-model="search_key" @input="searchTyping">
-						</div>
-
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close" @click="formClearSubmit">
-							<span aria-hidden="true">&times;</span>
-						</button>
+						<h5 class="modal-title">🔍 Search Music</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="formClearSubmit"></button>
 					</div>
-
-					<div class="modal-body" style="height: 600px">
-						<div v-for="track in searchResultList" :key="track.id" :class="{ thumbnail: true }">
-							<a><img :src="track.img" style="width:100%"></a>
-
-							<div class="caption">
-								<p class="title">{{ track.title }}</p>
-								<p>{{ track.message }}</p>
+					<div class="modal-body">
+						<div class="mb-3">
+							<div class="input-group">
+								<span class="input-group-text">🎵</span>
+								<input type="text" class="form-control form-control-lg" id="search-key" v-model="search_key" @input="searchTyping" placeholder="Search for songs, artists, or videos...">
 							</div>
-
-							<footer>
-								<a @click="chooseTrack(track)">
-									<span>add</span>
-								</a>
-							</footer>
+						</div>
+						
+						<div class="search-results" style="min-height: 400px;">
+							<div v-if="searchResultList.length === 0 && search_key.length > 0" class="text-center p-5 text-muted">
+								<i class="fas fa-search fa-3x mb-3"></i>
+								<p>No results found. Try different keywords.</p>
+							</div>
+							<div v-else-if="searchResultList.length === 0" class="text-center p-5 text-muted">
+								<i class="fas fa-music fa-3x mb-3"></i>
+								<p>Start typing to search for music...</p>
+							</div>
+							
+							<div v-for="track in searchResultList" :key="track.id" class="search-result-item mb-3">
+								<div class="card h-100">
+									<div class="row g-0">
+										<div class="col-md-4">
+											<img :src="track.img" class="img-fluid rounded-start h-100" style="object-fit: cover;">
+										</div>
+										<div class="col-md-8">
+											<div class="card-body">
+												<h6 class="card-title">{{ track.title }}</h6>
+												<p class="card-text text-muted small">{{ track.message || 'No description' }}</p>
+												<div class="d-grid">
+													<button class="btn btn-primary btn-sm" @click="chooseTrack(track)">
+														<i class="fas fa-plus"></i> Add to Playlist
+													</button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-
 		</div>
 
 	</div>
@@ -405,12 +457,103 @@ export default {
 				this.myModalSearch.hide()
 				console.log(error.message)
 			})
+		},
+		formatDate(dateString) {
+			if (!dateString) return 'Unknown';
+			try {
+				const date = new Date(dateString);
+				return date.toLocaleDateString('vi-VN', {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit'
+				});
+			} catch (e) {
+				return 'Unknown';
+			}
 		}
 	},
 };
 </script>
 
 <style>
+	/* Custom styles for improved UX */
+	.song-item {
+		border-bottom: 1px solid #e9ecef;
+		transition: background-color 0.2s ease;
+	}
+	
+	.song-item:hover {
+		background-color: #f8f9fa;
+	}
+	
+	.song-item.active-song {
+		background-color: #e7f3ff;
+		border-left: 4px solid #0d6efd;
+	}
+	
+	.song-thumbnail {
+		width: 80px;
+		height: 60px;
+		object-fit: cover;
+		border-radius: 8px;
+		position: relative;
+	}
+	
+	.song-number {
+		position: absolute;
+		top: -10px;
+		left: -10px;
+		background: #0d6efd;
+		color: white;
+		border-radius: 50%;
+		width: 24px;
+		height: 24px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 12px;
+		font-weight: bold;
+	}
+	
+	.song-title {
+		color: #333;
+		font-weight: 600;
+		line-height: 1.4;
+	}
+	
+	.song-title:hover {
+		color: #0d6efd;
+	}
+	
+	.song-message {
+		font-size: 0.9em;
+		line-height: 1.3;
+	}
+	
+	.card {
+		border: none;
+		box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+		border-radius: 0.5rem;
+	}
+	
+	.card-header {
+		background-color: #f8f9fa;
+		border-bottom: 1px solid #dee2e6;
+		border-radius: 0.5rem 0.5rem 0 0 !important;
+	}
+	
+	.btn {
+		border-radius: 0.375rem;
+		font-weight: 500;
+	}
+	
+	.form-control, .form-select {
+		border-radius: 0.375rem;
+	}
+	
+	/* Legacy styles for backward compatibility */
 	a:hover {
 		cursor: pointer;
 	}
@@ -438,9 +581,6 @@ export default {
 	.thumbnail.active_track {
 		border-left: 3px solid green;
 	}
-	/* .thumbnail.control {
-		text-align: center;
-	} */
 	.thumbnail.control .select-player {
 		float: left;
     	padding: 4px 12px 0 5px;
