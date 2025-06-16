@@ -2035,17 +2035,32 @@ function YoutubePlayer(){
 
   window.onYouTubeIframeAPIReady = function() {
     PLAYER_API_LOADED = true;
-  };
-
-  // called by $.getScript(SDK_URL)
+  };  // called by $.getScript(SDK_URL)
   window.initYT = function() {
-    gapi.client.setApiKey("AIzaSyAacbsunsYcPRCuMGCgGZG2IDcIiP6qtwo");
-    gapi.client.load('youtube', 'v3', function() {
-      apiReady = true;
-      $.getScript(PLAYER_API_SCRIPT, function() {
-        // will call window.onYouTubeIframeAPIReady()
+    // Lấy public API key từ backend
+    fetch('/api/youtube/config')
+      .then(response => response.json())
+      .then(config => {
+        if (config.success && config.publicApiKey) {
+          gapi.client.setApiKey(config.publicApiKey);
+        }
+        gapi.client.load('youtube', 'v3', function() {
+          apiReady = true;
+          $.getScript(PLAYER_API_SCRIPT, function() {
+            // will call window.onYouTubeIframeAPIReady()
+          });
+        });
+      })
+      .catch(error => {
+        console.error('Failed to load YouTube config:', error);
+        // Fallback: load without API key for basic player functionality
+        gapi.client.load('youtube', 'v3', function() {
+          apiReady = true;
+          $.getScript(PLAYER_API_SCRIPT, function() {
+            // will call window.onYouTubeIframeAPIReady()
+          });
+        });
       });
-    });
   };
 
   if (!SDK_LOADED) {

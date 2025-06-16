@@ -134,7 +134,7 @@ const authorizationJWT = async (req, res, next) => {
 app.use(authorizationJWT);
 
 // Routes
-app.use(routerApi);
+app.use('/api', routerApi);
 
 // Security and performance middleware
 app.use(helmet({
