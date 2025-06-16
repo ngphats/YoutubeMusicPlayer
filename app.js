@@ -5,35 +5,31 @@ require('dotenv').config();
 const bodyParse = require("body-parser");
 const session = require("express-session");
 const cors = require('cors')
+const compression = require('compression');
+const helmet = require('helmet');
 const app = express();
 const http = require('http');
 const https = require('https');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-const { graphqlHTTP } = require("express-graphql")
+const { createHandler } = require("graphql-http/lib/use/express");
 const { buildSchema } = require("graphql")
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
-const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-})
+let dbAdmin = null;
 
-// const firebaseConfig = {
-//     apiKey: "AIzaSyASmiJObRSfIJAIkOh98E8a89Wel9ILBj0",
-//     authDomain: "phatnn-firstproject.firebaseapp.com",
-//     projectId: "phatnn-firstproject",
-//     storageBucket: "phatnn-firstproject.appspot.com",
-//     messagingSenderId: "760386135946",
-//     appId: "1:760386135946:web:35a3a3b1637e294dc10a73",
-//     measurementId: "G-KCH1HXW8GY"
-//   };
-  
-// // Initialize Firebase
-// admin.initializeApp(firebaseConfig);
-
-const dbAdmin = admin.firestore();
+try {
+    const serviceAccount = require(`./credentials/firestore-koi-streaming.json`)
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    })
+    dbAdmin = admin.firestore();
+    console.log('Firebase initialized successfully');
+} catch (error) {
+    console.warn('Firebase credentials not found. Running without database features.');
+    console.warn('To enable database features, add your Firebase credentials to ./credentials/firestore-koi-streaming.json');
+}
 const { getAuth } = require('firebase-admin/auth');
 
 const routerView = require("./server/router");
@@ -65,7 +61,7 @@ var root = {
 
 app.use(
   "/graphql",
-  graphqlHTTP({
+  createHandler({
     schema: schema,
     rootValue: root,
     graphiql: true,
@@ -99,6 +95,11 @@ app.set('views', './views');
 app.use(routerView);
 
 const authorizationJWT = async (req, res, next) => {
+    // Skip auth if Firebase is not initialized
+    if (!dbAdmin) {
+        return next();
+    }
+    
     // console.log({ authorization: req.headers.authorization });
     const authorizationHeader = req.headers.authorization;
 
@@ -134,6 +135,13 @@ app.use(authorizationJWT);
 
 // Routes
 app.use(routerApi);
+
+// Security and performance middleware
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP for development
+    crossOriginEmbedderPolicy: false
+}));
+app.use(compression());
 
 // setting cors
 app.use(cors());
