@@ -2039,7 +2039,7 @@ function YoutubePlayer(){
 
   // called by $.getScript(SDK_URL)
   window.initYT = function() {
-    gapi.client.setApiKey(YOUTUBE_API_KEY);
+    gapi.client.setApiKey("AIzaSyAacbsunsYcPRCuMGCgGZG2IDcIiP6qtwo");
     gapi.client.load('youtube', 'v3', function() {
       apiReady = true;
       $.getScript(PLAYER_API_SCRIPT, function() {
