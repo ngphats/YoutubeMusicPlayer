@@ -4,6 +4,16 @@ const dateFormat = require("dateformat")
 const log = require("../library/Log")
 const playListModel = require("../models/PlayListModel")
 
+// Simple HTML entity escaping to prevent XSS
+const escapeHtml = (text) => {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 exports.home = [
     async (req, res, next) => {
@@ -14,10 +24,14 @@ exports.home = [
 
 exports.view = [
     async (req, res, next) => {
-        let playList = await playListModel.getAll()
-        log.debug("home-view", playList)
-        res.send({status: `OK`, data: playList})
-        res.end()
+        try {
+            let playList = await playListModel.getAll()
+            log.debug("home-view", playList)
+            res.send({status: `OK`, data: playList})
+        } catch (error) {
+            console.error('Error fetching playlist:', error);
+            res.status(500).send({status: `NG`, error: 'Failed to fetch playlist'})
+        }
     }
 ]
 
@@ -32,16 +46,31 @@ exports.add = [
     async (req, res, next) => {
         let trackParams = req.body
         log.debug("home-add", {trackParams})
-        if (trackParams.title && trackParams.url) {
-            console.log({trackParams});
-            // trackParams.play_status = 'waiting'
-            trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
+        
+        // Validate required fields
+        if (!trackParams.title || !trackParams.url) {
+            return res.status(400).send({status: `NG`, error: 'Title and URL are required'})
+        }
+        
+        // Validate URL format (basic YouTube URL check)
+        const youtubeUrlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+        if (!youtubeUrlPattern.test(trackParams.url)) {
+            return res.status(400).send({status: `NG`, error: 'Invalid YouTube URL'})
+        }
+        
+        // Sanitize inputs to prevent XSS - escape HTML entities
+        trackParams.title = escapeHtml(String(trackParams.title).substring(0, 200)); // Limit title length
+        trackParams.message = escapeHtml(trackParams.message ? String(trackParams.message).substring(0, 500) : ''); // Limit message length
+        
+        console.log({trackParams});
+        trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
+        
+        try {
             await playListModel.add(trackParams)
             res.send({status: `OK`, data: trackParams})
-            res.end()
-        } else {
-            res.send({status: `NG`})
-            res.end()
+        } catch (error) {
+            console.error('Error adding track:', error);
+            res.status(500).send({status: `NG`, error: 'Failed to add track'})
         }
     }
 ]
