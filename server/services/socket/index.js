@@ -79,18 +79,25 @@ let events = (io, dbAdmin) => {
             // console.log(`Player active`);
             // console.log(`IP: ${socket.request.connection.remoteAddress}`);
             // console.log(`SocketID: ${socket.id}`)
-            lsPlayerActive.push({
-                socket_id: socket.id,
-                player_ip: socket.request.connection.remoteAddress,
-                player_name: `Sói hoang ` + socket.id
-            })
+            
+            // Prevent duplicate entries by checking if socket_id already exists
+            const existingPlayerIndex = lsPlayerActive.findIndex(p => p.socket_id === socket.id);
+            if (existingPlayerIndex === -1) {
+                lsPlayerActive.push({
+                    socket_id: socket.id,
+                    player_ip: socket.request.connection.remoteAddress,
+                    player_name: `Sói hoang ` + socket.id
+                });
+            }
 
+            // Send to all clients including sender
             io.sockets.emit('list_player_active', lsPlayerActive)
         })
 
         socket.on('disconnect', () => {
             // Remove active player
             lsPlayerActive = lsPlayerActive.filter(item => item.socket_id !== socket.id)
+            // Send to all remaining clients
             io.sockets.emit('list_player_active', lsPlayerActive)
         })
 
@@ -101,19 +108,29 @@ let events = (io, dbAdmin) => {
         })
 
         socket.on('add_new_track', data => {
+            // Broadcast to all other clients (not including sender)
             socket.broadcast.emit('add_new_track', data)
         })
 
         socket.on('play', data => {
-            io.to(data.player_selected).emit('play', { track_idx: data.track_idx})
+            // Validate data before emitting
+            if (data && data.player_selected) {
+                io.to(data.player_selected).emit('play', { track_idx: data.track_idx || 0})
+            }
         })
 
         socket.on('on_track_change', params => {
-            socket.broadcast.emit('on_track_change', params)
+            // Validate params before broadcasting
+            if (params) {
+                socket.broadcast.emit('on_track_change', params)
+            }
         })
         
         socket.on('on_device_change', params => {
-            socket.broadcast.emit('on_track_change', params)
+            // Fix: should emit 'on_device_change' not 'on_track_change'
+            if (params) {
+                socket.broadcast.emit('on_device_change', params)
+            }
         })
     })
 }

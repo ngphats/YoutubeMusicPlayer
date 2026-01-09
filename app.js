@@ -68,6 +68,14 @@ app.use(
   })
 )
 
+// Security and performance middleware (should be before routes)
+app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP for development
+    crossOriginEmbedderPolicy: false
+}));
+app.use(compression());
+app.use(cors());
+
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({ extended: true }));
 
@@ -135,16 +143,6 @@ app.use(authorizationJWT);
 
 // Routes
 app.use('/api', routerApi);
-
-// Security and performance middleware
-app.use(helmet({
-    contentSecurityPolicy: false, // Disable CSP for development
-    crossOriginEmbedderPolicy: false
-}));
-app.use(compression());
-
-// setting cors
-app.use(cors());
 
 app.get("/test", function (req, res) {
     return res.status(200).json({ message: 'Hello world!' });

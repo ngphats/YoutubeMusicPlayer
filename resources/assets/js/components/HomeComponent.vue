@@ -418,18 +418,40 @@ export default {
   mounted() {
     this.view();
 
-    // Lắng nghe sự kiện đóng modal từ bên ngoài (ví dụ: nhấp backdrop)
-    document
-      .getElementById("modalSearch")
-      ?.addEventListener("hidden.bs.modal", () => {
-        this.showSearchModal = false;
-      });
+    // Initialize modals once during mount to avoid repeated initialization
+    this.myModalAdd = new bootstrap.Modal(
+      document.getElementById("modalAdd"),
+      {
+        keyboard: true,
+        focus: true,
+      }
+    );
+    
+    this.myModalSearch = new bootstrap.Modal(
+      document.getElementById("modalSearch"),
+      {
+        keyboard: true,
+      }
+    );
 
-    document
-      .getElementById("modalAdd")
-      ?.addEventListener("hidden.bs.modal", () => {
-        this.formClearSubmit();
-      });
+    // Lắng nghe sự kiện đóng modal từ bên ngoài (ví dụ: nhấp backdrop)
+    const modalSearch = document.getElementById("modalSearch");
+    const modalAdd = document.getElementById("modalAdd");
+    
+    modalSearch?.addEventListener("hidden.bs.modal", () => {
+      this.showSearchModal = false;
+    });
+    
+    // Focus on search input when modal is fully shown
+    modalSearch?.addEventListener("shown.bs.modal", () => {
+      if (this.$refs.searchInput) {
+        this.$refs.searchInput.focus();
+      }
+    });
+
+    modalAdd?.addEventListener("hidden.bs.modal", () => {
+      this.formClearSubmit();
+    });
   },
   watch: {
     // searchResultList(newQuestion, oldQuestion) {
@@ -455,16 +477,7 @@ export default {
       this.socket.disconnect();
     },
     add() {
-      if (Object.keys(this.myModalAdd).length === 0) {
-        this.myModalAdd = new bootstrap.Modal(
-          document.getElementById("modalAdd"),
-          {
-            keyboard: true,
-            focus: true,
-          }
-        );
-      }
-
+      // Modal is already initialized in mounted()
       this.myModalAdd.show();
     },
     addTrack(track) {
@@ -597,36 +610,7 @@ export default {
       this.playem.stop();
     },
     onSearch() {
-      // Sử dụng cách Vue-friendly để khởi tạo modal chỉ một lần
-      if (Object.keys(this.myModalSearch).length === 0) {
-        this.myModalSearch = new bootstrap.Modal(
-          document.getElementById("modalSearch"),
-          {
-            keyboard: true,
-          }
-        );
-
-        // Add event listener only once during initialization
-        const modalSearch = document.getElementById("modalSearch");
-
-        modalSearch.addEventListener("show.bs.modal", () => {
-          console.log(`event show modal trigger..`);
-        });
-
-        // Focus on search input when modal is fully shown
-        modalSearch.addEventListener("shown.bs.modal", () => {
-          if (this.$refs.searchInput) {
-            this.$refs.searchInput.focus();
-          }
-        });
-
-        // Listen for hidden event to sync with Vue state
-        modalSearch.addEventListener("hidden.bs.modal", () => {
-          this.showSearchModal = false;
-        });
-      }
-
-      // Update Vue state
+      // Modal is already initialized in mounted()
       this.showSearchModal = true;
       this.myModalSearch.show();
     },
