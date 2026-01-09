@@ -8,6 +8,7 @@ const Log = {};
 // Cache for open file streams to avoid creating new streams on every log call
 const fileStreamCache = new Map();
 const STREAM_CACHE_TTL = 60000; // 1 minute TTL for cached streams
+let cleanupInterval = null; // Store cleanup interval reference
 
 Log.getLogPath = (logName, dir='') => {
 	let dateNow = new Date();
@@ -35,9 +36,9 @@ Log.getLogPath = (logName, dir='') => {
 		lastAccess: Date.now()
 	});
 	
-	// Set up periodic cleanup of old streams
-	if (fileStreamCache.size === 1) {
-		setInterval(() => {
+	// Set up periodic cleanup only once
+	if (!cleanupInterval) {
+		cleanupInterval = setInterval(() => {
 			const now = Date.now();
 			for (const [key, entry] of fileStreamCache.entries()) {
 				if (now - entry.lastAccess > STREAM_CACHE_TTL) {

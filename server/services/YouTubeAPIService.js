@@ -10,9 +10,15 @@ class YouTubeAPIService {
             timeout: 10000, // 10 second timeout
         });
         
-        // Simple in-memory cache for video details (optional, can be removed if not needed)
+        // Simple in-memory cache for video details
         this.cache = new Map();
         this.CACHE_TTL = 300000; // 5 minutes
+        this.MAX_CACHE_SIZE = 100;
+        
+        // Set up periodic cache cleanup to prevent memory growth
+        this.cleanupInterval = setInterval(() => {
+            this.cleanCache();
+        }, 60000); // Run cleanup every minute
     }
 
     async searchVideos(query, maxResults = 10) {
@@ -57,15 +63,20 @@ class YouTubeAPIService {
                 };
             }
             
-            // Check cache first
+            // Check cache first and validate expiration during retrieval
             const cacheKey = `video_${videoId}`;
             const cached = this.cache.get(cacheKey);
-            if (cached && (Date.now() - cached.timestamp < this.CACHE_TTL)) {
-                return {
-                    success: true,
-                    data: cached.data,
-                    cached: true
-                };
+            if (cached) {
+                if (Date.now() - cached.timestamp < this.CACHE_TTL) {
+                    return {
+                        success: true,
+                        data: cached.data,
+                        cached: true
+                    };
+                } else {
+                    // Remove expired entry lazily
+                    this.cache.delete(cacheKey);
+                }
             }
             
             const response = await this.axiosInstance.get('/videos', {
@@ -82,9 +93,9 @@ class YouTubeAPIService {
                 timestamp: Date.now()
             });
             
-            // Clean old cache entries periodically
-            if (this.cache.size > 100) {
-                this.cleanCache();
+            // Enforce max cache size
+            if (this.cache.size > this.MAX_CACHE_SIZE) {
+                this.trimCache();
             }
             
             return {
@@ -131,6 +142,7 @@ class YouTubeAPIService {
         }
     }
     
+    // Clean expired cache entries
     cleanCache() {
         const now = Date.now();
         for (const [key, value] of this.cache.entries()) {
@@ -138,6 +150,21 @@ class YouTubeAPIService {
                 this.cache.delete(key);
             }
         }
+    }
+    
+    // Trim cache to max size by removing oldest entries
+    trimCache() {
+        if (this.cache.size <= this.MAX_CACHE_SIZE) {
+            return;
+        }
+        
+        // Convert to array and sort by timestamp
+        const entries = Array.from(this.cache.entries())
+            .sort((a, b) => a[1].timestamp - b[1].timestamp);
+        
+        // Remove oldest entries until we're at max size
+        const toRemove = entries.slice(0, this.cache.size - this.MAX_CACHE_SIZE);
+        toRemove.forEach(([key]) => this.cache.delete(key));
     }
 }
 

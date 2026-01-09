@@ -4,6 +4,16 @@ const dateFormat = require("dateformat")
 const log = require("../library/Log")
 const playListModel = require("../models/PlayListModel")
 
+// Simple HTML entity escaping to prevent XSS
+const escapeHtml = (text) => {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 exports.home = [
     async (req, res, next) => {
@@ -48,9 +58,9 @@ exports.add = [
             return res.status(400).send({status: `NG`, error: 'Invalid YouTube URL'})
         }
         
-        // Sanitize inputs to prevent XSS
-        trackParams.title = String(trackParams.title).substring(0, 200); // Limit title length
-        trackParams.message = trackParams.message ? String(trackParams.message).substring(0, 500) : ''; // Limit message length
+        // Sanitize inputs to prevent XSS - escape HTML entities
+        trackParams.title = escapeHtml(String(trackParams.title).substring(0, 200)); // Limit title length
+        trackParams.message = escapeHtml(trackParams.message ? String(trackParams.message).substring(0, 500) : ''); // Limit message length
         
         console.log({trackParams});
         trackParams.add_datetime = dateFormat(new Date(), "yyyy-mm-dd HH:MM:ss")
