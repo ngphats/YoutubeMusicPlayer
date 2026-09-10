@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 require('dotenv').config();
 const bodyParse = require("body-parser");
-const session = require("express-session");
 const cors = require('cors')
 const compression = require('compression');
 const helmet = require('helmet');
@@ -12,8 +11,6 @@ const http = require('http');
 const https = require('https');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-const { createHandler } = require("graphql-http/lib/use/express");
-const { buildSchema } = require("graphql")
 
 // Firebase admin default setting
 const admin = require('firebase-admin')
@@ -38,52 +35,10 @@ const service = require('./server/services');
 
 app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist/css'));
 app.use('/', express.static(__dirname + '/node_modules/bootstrap/dist/js'));
-app.use('/', express.static(__dirname + '/node_modules/jquery/dist'));
 app.use('/', express.static(__dirname + '/node_modules/@popperjs/core/dist/umd'));
-
-// const resolve = (file) => path.resolve(__dirname, file);
-// app.use("/dist", express.static(resolve("./dist")));
-
-
-// Construct a schema, using GraphQL schema language
-var schema = buildSchema(`
-  type Query {
-    hello: String
-  }
-`)
-
-// The root provides a resolver function for each API endpoint
-var root = {
-  hello: () => {
-    return "Hello world!"
-  },
-}
-
-app.use(
-  "/graphql",
-  createHandler({
-    schema: schema,
-    rootValue: root,
-    graphiql: true,
-  })
-)
 
 app.use(bodyParse.json());
 app.use(bodyParse.urlencoded({ extended: true }));
-
-// session
-app.set("trust proxy", 1); // trust first proxy
-app.use(
-    session({
-        secret: "token",
-        resave: false,
-        saveUninitialized: true,
-        cookie: {
-            secure: true,
-            maxAge: 2592000000,
-        },
-    })
-);
 
 app.use(express.static('./public'));
 
